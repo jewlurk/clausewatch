@@ -26,19 +26,42 @@ EXPECTED_TABLES = [
 ]
 
 
-def describe_dsn(dsn: str) -> None:
-    """Print the shape of the DSN without revealing the password."""
-    parts = urlsplit(dsn)
-    user = (parts.username or "?")
+def describe_dsn(dsn: str) -> bool:
+    """Print the shape of the DSN without revealing the password.
+
+    Returns False when the DSN is malformed. Parsing is done defensively: a password
+    containing '[' or ']' makes urlsplit raise "Invalid IPv6 URL", which is an
+    unhelpful message for what is really an unescaped-password problem.
+    """
+    if "[YOUR-PASSWORD]" in dsn or "YOURPASSWORD" in dsn:
+        print("FAIL: the password placeholder is still in DATABASE_URL.")
+        print("      Replace it (including the square brackets) with the real password.")
+        return False
+
+    try:
+        parts = urlsplit(dsn)
+    except ValueError as exc:
+        print(f"FAIL: DATABASE_URL could not be parsed: {exc}")
+        print(
+            "\nThis almost always means the password contains characters that are\n"
+            "special in a URL — most often [ ] % / @ # ? or :\n\n"
+            "Simplest fix: reset the database password to letters and digits only.\n"
+            "  https://supabase.com/dashboard/project/psppoaswytqhkdqbudnv/settings/database\n"
+            "A 24-character alphanumeric password is strong and avoids escaping entirely."
+        )
+        return False
+
     host = parts.hostname or "?"
-    print(f"user : {user}")
+    print(f"user : {parts.username or '?'}")
     print(f"host : {host}")
     print(f"port : {parts.port}")
+
     if "pooler.supabase.com" not in host:
         print(
-            "\nWARNING: host is not the pooler. Supabase direct connections are "
+            "\nWARNING: host is not the pooler. Supabase direct connections are\n"
             "IPv6-only and GitHub Actions has no IPv6 — this will time out."
         )
+    return True
 
 
 def main() -> int:
@@ -47,7 +70,8 @@ def main() -> int:
         print("FAIL: DATABASE_URL is not set")
         return 1
 
-    describe_dsn(dsn)
+    if not describe_dsn(dsn):
+        return 1
 
     try:
         conn = connect(dsn)
