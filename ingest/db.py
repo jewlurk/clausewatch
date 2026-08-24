@@ -124,6 +124,17 @@ class PostgresVersionRepository:
                 (issue_date, effective_date, version_id),
             )
 
+    def delete_deltas_for_instrument(self, instrument_id: int) -> int:
+        """Clear an instrument's deltas.
+
+        Must run before re-parsing sections: deltas reference section ids, so deleting
+        sections while deltas still point at them violates the foreign key. Ordering
+        matters — deltas depend on sections, so deltas go first.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("delete from deltas where instrument_id = %s", (instrument_id,))
+            return cur.rowcount
+
     def replace_sections(self, version_id: int, sections) -> int:
         """Write a version's sections, replacing any previous parse.
 

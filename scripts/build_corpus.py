@@ -39,6 +39,11 @@ def main() -> int:
             return 1
         instrument_id = row[0]
 
+        # Deltas reference section ids, so they must go before sections are replaced.
+        cleared = repo.delete_deltas_for_instrument(instrument_id)
+        if cleared:
+            print(f"cleared {cleared} existing deltas before re-parsing\n")
+
         versions = repo.versions_for(instrument_id)
         print(f"{len(versions)} stored versions\n")
 
