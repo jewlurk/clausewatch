@@ -1,7 +1,7 @@
 [project]
-name = "mas-delta-ingest"
+name = "clausewatch-ingest"
 version = "0.1.0"
-description = "MAS regulatory delta engine — crawler, parser, differ"
+description = "Clausewatch — MAS regulatory change detection: crawler, parser, differ"
 requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.27",

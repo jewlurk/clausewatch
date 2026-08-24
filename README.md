@@ -1,4 +1,4 @@
-# MAS Regulatory Delta Engine
+# Clausewatch
 
 Clause-level change detection for Monetary Authority of Singapore (MAS) regulatory
 instruments, mapped to a customer's own internal controls. See [CLAUDE.md](CLAUDE.md)

@@ -1,4 +1,4 @@
-# BUILD BRIEF v2 — MAS Regulatory Delta Engine
+# BUILD BRIEF v2 — Clausewatch (MAS Regulatory Delta Engine)
 
 > **Setup:** Paste this into Claude Code as the opening message of the first session, and commit it to the repo root as `AGENTS.md` so it persists. This document is self-contained — it assumes you know nothing about this project.
 
@@ -637,7 +637,7 @@ Every response ends with these two blocks. Not most responses. Every one.
 
 **Rules for the founder block:**
 
-- **Be specific to the point of tedium.** Not "set up Supabase" — "Go to supabase.com, sign in with GitHub, New Project, name it `mas-delta`, region Singapore, choose a DB password and save it in your password manager, then paste me the Project URL and the `anon` key from Settings → API. Do NOT paste the `service_role` key into chat."
+- **Be specific to the point of tedium.** Not "set up Supabase" — "Go to supabase.com, sign in with GitHub, New Project, name it `clausewatch`, region Singapore, choose a DB password and save it in your password manager, then paste me the Project URL and the `anon` key from Settings → API. Do NOT paste the `service_role` key into chat."
 - **Always include a time estimate.** He needs to know if it's 2 minutes or 2 hours.
 - **Always include the business task**, even when it's not technical. He is 18 and will hide in the code. Outreach and follow-ups are the actual bottleneck — G3 and G5 are not engineering gates. If the current gate has no business action, say "no business task this week" explicitly, so the omission is deliberate rather than forgotten.
 - **Never ask him to hand over a secret you don't need.** Anon keys yes, service-role keys and passwords no — those go in GitHub/Cloudflare secrets, which he sets himself.

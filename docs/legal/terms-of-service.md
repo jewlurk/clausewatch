@@ -5,7 +5,7 @@
 **Effective date:** [EFFECTIVE DATE]
 **Version:** 1.0
 
-These Terms govern your use of the MAS Regulatory Delta Engine (the "**Service**")
+These Terms govern your use of Clausewatch (the "**Service**")
 provided by [LEGAL ENTITY NAME] (UEN [UEN]) of [BUSINESS ADDRESS] ("**we**", "**us**",
 "**our**"). By creating an account or using the Service you agree to these Terms. If you
 do not agree, do not use the Service.

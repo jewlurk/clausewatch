@@ -29,7 +29,7 @@ class Config:
             supabase_url=os.environ.get("SUPABASE_URL", ""),
             database_url=os.environ.get("DATABASE_URL"),
             crawler_user_agent=os.environ.get(
-                "CRAWLER_USER_AGENT", "mas-delta-engine/0.1"
+                "CRAWLER_USER_AGENT", "clausewatch/0.1"
             ),
             crawler_min_interval_seconds=float(
                 os.environ.get("CRAWLER_MIN_INTERVAL_SECONDS", "2")

@@ -21,8 +21,8 @@ import httpx
 from .ratelimit import RateLimiter
 
 DEFAULT_USER_AGENT = (
-    "Mozilla/5.0 (compatible; mas-delta-engine/0.1; "
-    "+https://github.com/jewlurk/mas-delta-engine; contact: hs20.26@ichat.sp.edu.sg)"
+    "Mozilla/5.0 (compatible; clausewatch/0.1; "
+    "+https://github.com/jewlurk/clausewatch; contact: hs20.26@ichat.sp.edu.sg)"
 )
 
 # WAF block detector: the maintenance page is served with HTTP 200, so status alone
