@@ -36,6 +36,8 @@ class ObjectStore(Protocol):
 
     def exists(self, key: str) -> bool: ...
 
+    def get(self, key: str) -> bytes: ...
+
 
 class LocalStore:
     """Filesystem-backed store for tests and local runs."""
@@ -53,6 +55,9 @@ class LocalStore:
 
     def exists(self, key: str) -> bool:
         return self._path(key).exists()
+
+    def get(self, key: str) -> bytes:
+        return self._path(key).read_bytes()
 
 
 class R2Store:
@@ -85,6 +90,9 @@ class R2Store:
         self._client.put_object(
             Bucket=self.bucket, Key=key, Body=data, ContentType=content_type
         )
+
+    def get(self, key: str) -> bytes:
+        return self._client.get_object(Bucket=self.bucket, Key=key)["Body"].read()
 
     def exists(self, key: str) -> bool:
         from botocore.exceptions import ClientError

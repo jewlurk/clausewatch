@@ -124,6 +124,105 @@ class PostgresVersionRepository:
                 (issue_date, effective_date, version_id),
             )
 
+    def replace_sections(self, version_id: int, sections) -> int:
+        """Write a version's sections, replacing any previous parse.
+
+        Replace rather than append: re-parsing after a parser improvement must not
+        leave stale rows behind, and the parser is expected to keep improving.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("delete from sections where version_id = %s", (version_id,))
+            if not sections:
+                return 0
+            cur.executemany(
+                """
+                insert into sections
+                    (version_id, section_key, depth, ordinal, heading, body, body_sha256)
+                values (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                [
+                    (
+                        version_id,
+                        s.section_key,
+                        s.depth,
+                        s.ordinal,
+                        s.heading,
+                        s.body,
+                        s.body_sha256,
+                    )
+                    for s in sections
+                ],
+            )
+            cur.execute(
+                "update instrument_versions set parse_status = 'parsed', parse_error = null "
+                "where id = %s",
+                (version_id,),
+            )
+        return len(sections)
+
+    def mark_parse_failed(self, version_id: int, error: str) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "update instrument_versions set parse_status = 'failed', parse_error = %s "
+                "where id = %s",
+                (error[:2000], version_id),
+            )
+
+    def section_ids(self, version_id: int) -> dict[str, int]:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "select section_key, id from sections where version_id = %s",
+                (version_id,),
+            )
+            return dict(cur.fetchall())
+
+    def replace_deltas(
+        self, *, instrument_id: int, from_version_id: int, to_version_id: int, deltas
+    ) -> int:
+        """Write the delta set for one version pair, replacing any previous computation.
+
+        The unique index on (from, to, old_section, new_section) makes re-running safe,
+        but thresholds change as the differ is tuned, so a stale delta must not survive
+        a recomputation.
+        """
+        old_ids = self.section_ids(from_version_id)
+        new_ids = self.section_ids(to_version_id)
+
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "delete from deltas where from_version_id = %s and to_version_id = %s",
+                (from_version_id, to_version_id),
+            )
+            if not deltas:
+                return 0
+            cur.executemany(
+                """
+                insert into deltas
+                    (instrument_id, from_version_id, to_version_id, op,
+                     old_section_id, new_section_id, old_section_key, new_section_key,
+                     similarity, diff_html, severity, obligation_change)
+                values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                [
+                    (
+                        instrument_id,
+                        from_version_id,
+                        to_version_id,
+                        d.op,
+                        old_ids.get(d.old_section_key) if d.old_section_key else None,
+                        new_ids.get(d.new_section_key) if d.new_section_key else None,
+                        d.old_section_key,
+                        d.new_section_key,
+                        d.similarity,
+                        d.diff_html,
+                        d.severity,
+                        d.obligation_change,
+                    )
+                    for d in deltas
+                ],
+            )
+        return len(deltas)
+
     def versions_for(self, instrument_id: int) -> list[dict]:
         with self.conn.cursor() as cur:
             cur.execute(

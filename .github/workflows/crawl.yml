@@ -23,6 +23,10 @@ on:
         description: "Backfill Notice 626 history (T14)"
         type: boolean
         default: false
+      build_corpus:
+        description: "Parse stored documents into sections and compute deltas"
+        type: boolean
+        default: false
 
 env:
   # Not a secret: the account id appears in every dashboard URL and in the S3 endpoint.
@@ -60,6 +64,13 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: python scripts/backfill_626.py
+      - name: Build corpus (sections + deltas)
+        if: github.event_name == 'workflow_dispatch' && inputs.build_corpus
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: python scripts/build_corpus.py
       - name: Crawl (placeholder until the daily pipeline lands — T27)
         if: github.event_name == 'schedule'
         run: echo "daily crawl not yet wired end to end — see backlog T27"
