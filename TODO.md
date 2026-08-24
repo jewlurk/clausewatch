@@ -8,27 +8,16 @@ Last updated: 25 August 2026
 
 ## → DO THIS NOW
 
-Do these in order. The token is scoped to a bucket name, so the bucket must exist
-under its final name first or the token has to be made twice.
+- [ ] **Add `DATABASE_URL` to GitHub secrets.** Supabase → Project Settings →
+      **Database** → Connection string → choose **Session pooler** (not Direct
+      connection: Supabase direct connections are IPv6-only on the free tier and GitHub
+      Actions runners have no IPv6, so a direct URL fails in CI). Replace
+      `[YOUR-PASSWORD]` with your DB password. Paste it into GitHub → Settings →
+      Secrets and variables → **Actions** → `DATABASE_URL`. Never into chat.
+      Blocks the Postgres writer and T14 backfill. *~3 min*
 
-- [ ] **1. Create the bucket `clausewatch-raw`.** R2 → Create bucket → name
-      `clausewatch-raw` → location **Asia-Pacific (APAC)** → Create. Leave public access
-      **off**. *~2 min*
-
-- [ ] **2. Create the R2 API token.**
-      1. `https://dash.cloudflare.com/453137188783dc5aaf71b39099f195ba/r2/api-tokens`
-      2. **Create Account API token** (the top button — it survives user changes; the
-         User token dies if you leave the org)
-      3. Name: `clausewatch-crawler`
-      4. Permission: **Object Read & Write**
-      5. Scope: **specific bucket** → `clausewatch-raw`
-      6. Create. Copy the **Access Key ID** and **Secret Access Key** — shown once.
-      7. GitHub repo → Settings → Secrets and variables → **Actions** → New repository
-         secret, twice: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
-
-      Never paste these into chat. Blocks T12. *~8 min*
-
-- [ ] **3. Delete the old `mas-raw` bucket.** It is empty. *~1 min*
+- [ ] **Delete the old Tokyo Supabase project** (`mas-delta` / spmazvkgoxohdiokcrmr).
+      The Singapore project is verified working. *~1 min*
 
 ---
 
@@ -49,13 +38,6 @@ the name — it is not a trademark.
 **Never put "MAS" in the customer-facing name.** Implying affiliation with a statutory
 board is a real risk, and ACRA restricts names suggesting a government connection.
 
-Still to rename (founder actions — I cannot do these):
-- [ ] **GitHub repo** `mas-delta-engine` → `clausewatch`. Repo → Settings → rename.
-      Then tell me and I will update the local remote in one command. GitHub redirects
-      the old URL, so nothing breaks immediately.
-- [ ] **Supabase project** — name it `clausewatch` when recreating it in Singapore.
-- [ ] **Local folder** `~/mas-delta-engine` — optional, cosmetic. Renaming it changes
-      your paths; leave it unless it bothers you.
 
 ### Official email — and the domain question
 
@@ -85,7 +67,9 @@ demo, so it does not block anything today.
       the DPO and get a reply within 30 days
 - [ ] Not the school address; it gets revoked and it reads badly to this buyer
 
-### Supabase region (Tokyo → Singapore)
+### Supabase region — DONE (moved to Singapore)
+<!-- kept for history -->
+#### old notes
 Currently `ap-northeast-1` (Tokyo). Works fine. The only cost of staying is a longer
 answer to "where is our data hosted?" on vendor questionnaires. Free to move while there
 is no data; a real migration later.
@@ -135,7 +119,10 @@ screenshot, a commit, or a support ticket.
 
 ## Done
 
-- [x] Supabase project created (Tokyo), migrations `0001` and `0002` applied and verified
+- [x] Supabase project in **Singapore** (`psppoaswytqhkdqbudnv`), migrations `0001` and
+      `0002` applied and verified
 - [x] Corpus locked down — public key can no longer read or write it
-- [x] GitHub repo, CI green on every commit
-- [x] Cloudflare R2 bucket created, Asia-Pacific, private (rename to `clausewatch-raw` pending)
+- [x] GitHub repo renamed to `clausewatch`, CI green on every commit
+- [x] R2 bucket `clausewatch-raw` created (APAC, private), API token scoped to it,
+      secrets in GitHub Actions — **connectivity verified by a real workflow run**
+- [x] Product naming standardised on Clausewatch
