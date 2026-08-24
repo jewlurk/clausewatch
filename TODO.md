@@ -67,20 +67,6 @@ demo, so it does not block anything today.
       the DPO and get a reply within 30 days
 - [ ] Not the school address; it gets revoked and it reads badly to this buyer
 
-### Supabase region — DONE (moved to Singapore)
-<!-- kept for history -->
-#### old notes
-Currently `ap-northeast-1` (Tokyo). Works fine. The only cost of staying is a longer
-answer to "where is our data hosted?" on vendor questionnaires. Free to move while there
-is no data; a real migration later.
-
-- [ ] New Project, same `mas` org, region **Southeast Asia (Singapore)**
-- [ ] SQL Editor → run `db/migrations/0001_init.sql`, then `0002_lock_corpus_rls.sql`, in
-      that order
-- [ ] Send the new **Project URL** + **publishable key** (not the secret key)
-- [ ] Delete the Tokyo project **only after** the new one is confirmed working
-- [ ] All keys rotate as a side effect — no separate rotation needed
-
 ### DPO
 - [ ] Appoint one (realistically you) and fill `[DPO NAME]` / `[DPO EMAIL]` in
       [docs/legal/privacy-policy.md](docs/legal/privacy-policy.md). Required by PDPA
