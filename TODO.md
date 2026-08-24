@@ -8,10 +8,16 @@ Last updated: 25 August 2026
 
 ## → DO THIS NOW
 
-**Nothing is blocking engineering.** All credentials are in place and verified:
-R2, the database, and the GitHub secrets. I can run the pipeline myself.
+- [ ] **Enable GitHub Pages** so the demo page gets a public URL. I cannot do this —
+      it needs repo-owner rights and my access is collaborator-level.
+      1. https://github.com/jewlurk/clausewatch/settings/pages
+      2. Under **Build and deployment** → **Source** → choose **GitHub Actions**
+      3. Tell me, and I will deploy. The URL will be
+         `https://jewlurk.github.io/clausewatch/`
+      *~1 min*
 
-The only open item that matters is sales — see below.
+**Everything else in the pipeline is done and verified.** The page is already built —
+it is downloadable from the `demo` workflow run as the `demo-page` artifact.
 
 ---
 
@@ -137,3 +143,6 @@ alter extension pg_trgm set schema extensions;
 - [x] `DATABASE_URL` verified — PostgreSQL 17.6, all 6 corpus tables, MAS seeded
 - [x] **Notice 626 backfilled: 15 versions (2014-2025) in R2 and the database**
 - [x] Dedup proven live — a second identical backfill recorded 0 new versions
+- [x] Corpus built: 15 documents parsed, 7 consolidated versions on the timeline
+      (2009-2025), 267 clause-level changes computed
+- [x] **T21 demo changelog page generated** — G2 asset, pending only a public URL
