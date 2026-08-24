@@ -13,6 +13,7 @@ deep-linked to MAS instead.
 from __future__ import annotations
 
 import html
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -26,6 +27,42 @@ OUT = Path(__file__).resolve().parent.parent / "web" / "index.html"
 
 # Never display more than this share of an instrument's clauses in one comparison.
 EXCERPT_CAP = 0.40
+
+# Words of unchanged text to keep either side of a change. A definitions clause runs to
+# thousands of characters; showing all of it for a one-word amendment buries the change
+# and pushes the page toward reproducing the instrument.
+CONTEXT_WORDS = 22
+
+_SEGMENT_RE = re.compile(r"(<(?:ins|del)>.*?</(?:ins|del)>)", re.DOTALL)
+
+
+def window(diff_html_text: str) -> str:
+    """Keep changed spans plus a little context; elide long unchanged stretches.
+
+    Operates on whole <ins>/<del> segments rather than raw characters, so a tag can
+    never be split — the input is already escaped, and it must stay well-formed.
+    """
+    parts = _SEGMENT_RE.split(diff_html_text)
+    out: list[str] = []
+    for index, part in enumerate(parts):
+        if index % 2:  # a changed segment
+            out.append(part)
+            continue
+        words = part.split()
+        if len(words) <= CONTEXT_WORDS * 2:
+            out.append(part)
+            continue
+        head = " ".join(words[:CONTEXT_WORDS]) if index else ""
+        tail = " ".join(words[-CONTEXT_WORDS:]) if index < len(parts) - 1 else ""
+        ellipsis = ' <span class="gap">[…]</span> '
+        if index == 0:
+            out.append(ellipsis + tail)
+        elif index == len(parts) - 1:
+            out.append(head + ellipsis)
+        else:
+            out.append(head + ellipsis + tail)
+    return "".join(out)
+
 
 OP_LABEL = {
     "ADDED": "Added",
@@ -103,7 +140,7 @@ def render(instrument, grouped, counts) -> str:
                 if op == "RENUMBERED" and old_key and old_key != new_key
                 else ""
             )
-            body = diff_html_text or (
+            body = (window(diff_html_text) if diff_html_text else None) or (
                 '<span class="muted">Clause added — see the official text at MAS.</span>'
                 if op == "ADDED"
                 else '<span class="muted">Clause removed.</span>'
@@ -195,6 +232,7 @@ ins {{ background: var(--add-bg); color: var(--add); text-decoration: none;
 del {{ background: var(--del-bg); color: var(--del); padding: .05em .12em;
   border-radius: 2px; }}
 .muted {{ color: var(--muted); }}
+.gap {{ color: var(--muted); font-size: .85em; }}
 .more {{ font-size: .9rem; font-style: italic; }}
 footer {{ border-top: 1px solid var(--line); margin-top: 4rem; padding-top: 1.5rem;
   color: var(--muted); font-size: .87rem; }}

@@ -193,8 +193,26 @@ def parse_footnotes(footnote_text: str) -> list[Section]:
     return sections
 
 
+# MAS appends an amendment history after the operative text ("Endnotes on History of
+# Amendments — 1. MAS Notice 626 (Amendment) 2025 with effect from 1 July 2025").
+# It is not part of any clause, but it directly follows the last one, so without this
+# cut the final clause absorbs it — and since the history grows with every amendment,
+# the last clause then appears modified in every single comparison.
+ENDNOTES_RE = re.compile(
+    r"\bEndnotes?\s+on\b|\bEndnotes?\s*$|\bHistory\s+of\s+Amendments\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def strip_endnotes(text: str) -> str:
+    """Drop the amendment-history endnotes that follow the operative text."""
+    match = ENDNOTES_RE.search(text, pos=len(text) // 2)
+    return text[: match.start()] if match else text
+
+
 def parse_sections(text: str) -> list[Section]:
     """Split document text into clause-level sections, in document order."""
+    text = strip_endnotes(text)
     sections: list[Section] = []
     heading: str | None = None
     container: str | None = None
