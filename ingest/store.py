@@ -1,0 +1,98 @@
+"""Object storage for raw regulator documents.
+
+Two implementations behind one protocol:
+  * R2Store    — Cloudflare R2 via the S3-compatible API. Production.
+  * LocalStore — filesystem. Tests and local development, so the pipeline can be
+                 exercised end to end without credentials.
+
+The bucket is private and is never served to end users (brief §11.3). We store raw
+documents so we can re-parse historical versions when the parser improves, and so a
+diff can always be reproduced from source — which is what makes the audit trail real.
+"""
+from __future__ import annotations
+
+import hashlib
+import os
+from pathlib import Path
+from typing import Protocol
+
+
+def content_sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def object_key(regulator_code: str, instrument_ref: str, sha: str, suffix: str) -> str:
+    """Content-addressed key: identical bytes always land on the same key.
+
+    Keyed by hash rather than by date or version number, so re-fetching an unchanged
+    document overwrites itself harmlessly instead of accumulating duplicates.
+    """
+    safe_ref = instrument_ref.replace("/", "-").replace(" ", "_")
+    return f"{regulator_code}/{safe_ref}/{sha}{suffix}"
+
+
+class ObjectStore(Protocol):
+    def put(self, key: str, data: bytes, content_type: str) -> None: ...
+
+    def exists(self, key: str) -> bool: ...
+
+
+class LocalStore:
+    """Filesystem-backed store for tests and local runs."""
+
+    def __init__(self, root: str | Path) -> None:
+        self.root = Path(root)
+
+    def _path(self, key: str) -> Path:
+        return self.root / key
+
+    def put(self, key: str, data: bytes, content_type: str) -> None:
+        path = self._path(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+
+    def exists(self, key: str) -> bool:
+        return self._path(key).exists()
+
+
+class R2Store:
+    """Cloudflare R2 over the S3-compatible API.
+
+    Credentials come from the environment (GitHub Actions secrets in CI); they are
+    never read from a file in the repo.
+    """
+
+    def __init__(
+        self,
+        account_id: str | None = None,
+        access_key_id: str | None = None,
+        secret_access_key: str | None = None,
+        bucket: str | None = None,
+    ) -> None:
+        import boto3  # imported lazily so tests need no AWS SDK
+
+        self.bucket = bucket or os.environ["R2_BUCKET"]
+        account = account_id or os.environ["R2_ACCOUNT_ID"]
+        self._client = boto3.client(
+            "s3",
+            endpoint_url=f"https://{account}.r2.cloudflarestorage.com",
+            aws_access_key_id=access_key_id or os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=secret_access_key or os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+        )
+
+    def put(self, key: str, data: bytes, content_type: str) -> None:
+        self._client.put_object(
+            Bucket=self.bucket, Key=key, Body=data, ContentType=content_type
+        )
+
+    def exists(self, key: str) -> bool:
+        from botocore.exceptions import ClientError
+
+        try:
+            self._client.head_object(Bucket=self.bucket, Key=key)
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] in ("404", "NoSuchKey", "NotFound"):
+                return False
+            raise
+        return True
