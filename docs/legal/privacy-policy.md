@@ -6,9 +6,9 @@
 **Version:** 1.0
 
 This Policy explains how [LEGAL ENTITY NAME] (UEN [UEN]) ("**we**", "**us**") collects,
-uses, discloses and protects personal data in connection with the MAS Regulatory Delta
-Engine (the "**Service**"), in accordance with the Personal Data Protection Act 2012 of
-Singapore (the "**PDPA**").
+uses, discloses and protects personal data in connection with Clausewatch (the
+"**Service**"), in accordance with the Personal Data Protection Act 2012 of Singapore
+(the "**PDPA**").
 
 ---
 
