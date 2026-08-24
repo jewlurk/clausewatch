@@ -8,16 +8,10 @@ Last updated: 25 August 2026
 
 ## → DO THIS NOW
 
-- [ ] **Add `DATABASE_URL` to GitHub secrets.** Supabase → Project Settings →
-      **Database** → Connection string → choose **Session pooler** (not Direct
-      connection: Supabase direct connections are IPv6-only on the free tier and GitHub
-      Actions runners have no IPv6, so a direct URL fails in CI). Replace
-      `[YOUR-PASSWORD]` with your DB password. Paste it into GitHub → Settings →
-      Secrets and variables → **Actions** → `DATABASE_URL`. Never into chat.
-      Blocks the Postgres writer and T14 backfill. *~3 min*
+**Nothing is blocking engineering.** All credentials are in place and verified:
+R2, the database, and the GitHub secrets. I can run the pipeline myself.
 
-- [ ] **Delete the old Tokyo Supabase project** (`mas-delta` / spmazvkgoxohdiokcrmr).
-      The Singapore project is verified working. *~1 min*
+The only open item that matters is sales — see below.
 
 ---
 
@@ -103,6 +97,32 @@ disabled on a corpus table, that key becomes dangerous again.
 Rotate immediately if a secret key or DB password is ever pasted into chat, a
 screenshot, a commit, or a support ticket.
 
+## Security advisor findings — reviewed, no action needed
+
+Supabase's Security Advisor shows **0 errors, 1 warning, 6 info**. All reviewed
+25 Aug 2026:
+
+**6 x "RLS Enabled No Policy"** on `regulators`, `instruments`, `instrument_versions`,
+`sections`, `deltas`, `crawl_runs` — **this is intentional and correct**. Migration
+0002 enables RLS with no policy on purpose, so the public key can read and write
+nothing. The advisor flags it because that pattern is usually an accident (someone
+enabled RLS and forgot the policies). Here it is the security control. Verified by
+probe: anon reads return `[]`, writes return `42501 permission denied`.
+
+**1 x "Extension in Public"** (`public.pg_trgm`) — accepted, not fixed. Best practice
+is extensions in their own schema. The concern is that objects in `public` can be
+shadowed by users with schema access; anon has no access to these tables at all, so
+the practical risk here is close to zero. Against that, `pg_trgm` backs
+`sections_body_trgm_idx`, which is load-bearing for renumbering detection, and moving
+an extension means the operator class and search_path have to keep resolving. Not a
+change worth making immediately before the demo. If we ever do fix it:
+
+```sql
+create schema if not exists extensions;
+alter extension pg_trgm set schema extensions;
+-- then confirm sections_body_trgm_idx still resolves gin_trgm_ops
+```
+
 ## Done
 
 - [x] Supabase project in **Singapore** (`psppoaswytqhkdqbudnv`), migrations `0001` and
@@ -112,3 +132,8 @@ screenshot, a commit, or a support ticket.
 - [x] R2 bucket `clausewatch-raw` created (APAC, private), API token scoped to it,
       secrets in GitHub Actions — **connectivity verified by a real workflow run**
 - [x] Product naming standardised on Clausewatch
+- [x] Old Tokyo Supabase project deleted
+- [x] R2 credentials verified by live workflow run
+- [x] `DATABASE_URL` verified — PostgreSQL 17.6, all 6 corpus tables, MAS seeded
+- [x] **Notice 626 backfilled: 15 versions (2014-2025) in R2 and the database**
+- [x] Dedup proven live — a second identical backfill recorded 0 new versions
