@@ -57,7 +57,11 @@ def main() -> int:
                 continue
 
             repo.replace_sections(pv.version_id, pv.sections)
-            repo.set_version_dates(pv.version_id, pv.issue_date, pv.effective_date)
+            # instrument_versions.issue_date is the date *this version* was issued —
+            # i.e. its revision date. The instrument's original issue date is a
+            # property of the instrument, not of each version, and using it here made
+            # every version appear to date from 2015.
+            repo.set_version_dates(pv.version_id, pv.version_date, pv.effective_date)
             parsed.append(pv)
 
             kind = (
