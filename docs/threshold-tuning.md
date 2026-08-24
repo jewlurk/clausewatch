@@ -2,8 +2,7 @@
 
 **Date:** 25 August 2026
 **Question G1 asks:** can clause-level diffing hit under 5% false positives on real MAS documents?
-**Answer: yes — 0% false positives, 100% precision on the measured pair.** Recall is the
-weaker number and is where the remaining work is.
+**Answer: yes — 0% false positives, 100% precision, 94.4% recall on the measured pair.**
 
 ## How this was measured
 
@@ -15,38 +14,51 @@ the 28 March 2024 version — exactly our diff pair.
 
 In that PDF, changed text is coloured red (struck through for deletions, underlined for
 insertions). Extracting the document twice — once with all characters, once with red
-characters omitted — and comparing per clause yields **MAS's own list of changed
-clauses**, independent of our code. That is the ground truth: **22 clauses**.
+characters omitted — and comparing per section yields **MAS's own list of changed
+sections**, independent of our code: **25 sections** (18 clauses + 7 footnotes).
+
+The oracle covers footnotes as well as clauses. An earlier version did not, and scored
+every real footnote amendment as a false positive — which understated clause-level
+recall at 77% when the true figure was 94.4%. Measure the same units you report.
 
 Reproduce with `scripts/measure_g1.py`.
 
 ## Result
 
-| Metric | Value | Gate |
+Both modes are measured on every run. Clause-only is what ships.
+
+| | Clauses only (**shipping**) | With footnotes |
 |---|---|---|
-| Ground truth (MAS-marked changed clauses) | 22 | — |
-| Reported by `compute_delta` | 17 | — |
-| True positives | 17 | — |
-| **False positives** | **0 (0.0%)** | **< 5% ✅** |
-| Precision | 100% | — |
-| Recall | 77.3% | — |
+| Sections parsed | 146 | 162 |
+| MAS says changed | 18 | 25 |
+| We report | 17 | 33 |
+| **False positives** | **0 (0.0%)** ✅ | 9 (27.3%) |
+| Precision | **100%** | 72.7% |
+| Recall | **94.4%** | 96.0% |
 
-### Recall, honestly
+### The one real miss
 
-Five clauses MAS marked are not reported. They split into two groups:
+Para **6.24**. Its extracted text is byte-identical between the 2024 and 2025 PDFs with
+*and* without footnotes, yet MAS coloured it in the tracked document — the change is
+invisible to text extraction (formatting, or colour applied to unchanged text). Not
+currently detectable by any text-based differ.
 
-| Clause | Cause | Real miss? |
-|---|---|---|
-| 4.1, 6.3 | Change is **inside a footnote**, and footnotes are excluded from clause bodies | **Yes** |
-| 15.14, 15.8, 6.24 | Extracted text is byte-identical with *and* without footnotes — MAS applied colour to text that did not change | No (oracle artifact) |
+### Footnotes: why they are off by default
 
-Discounting the three oracle artifacts, real recall is **17/19 = 89.5%**.
+Footnotes carry real amendments — the June 2025 round renumbered cross-references from
+`11A.x` to `11.x` inside footnote text — and enabling them lifts recall 94.4% → 96.0%.
+They are parsed and available (`parse_pdf(..., include_footnotes=True)`), keyed
+`Footnote N`, so footnote renumbering is absorbed by the differ's existing RENUMBERED
+path rather than smearing across every clause that cites them.
 
-**This is the top open risk.** For a compliance product a missed change is worse than a
-false positive: the entire promise is "you will not miss anything." Fix is known — parse
-footnotes as their own sections with stable keys instead of dropping them, so footnote
-edits surface as changes to `Footnote N` while renumbering is absorbed by the existing
-RENUMBERED path. Not yet done.
+They are **off by default** because they also take the false-positive rate from 0% to
+27.3%. The residual noise is sub-item labels (`(a)`/`(c)`) reordering under PDF column
+extraction — an extraction-stability problem, not a differ fault. Nine noisy alerts to
+recover 1.6 points of recall is the wrong trade for a product whose value is trust.
+
+**Next task on this:** stabilise footnote sub-item extraction, then turn footnotes on
+and re-measure. Until then, the product does not alert on footnote-only changes, and
+that limitation should be stated plainly to design partners rather than discovered.
 
 ## What actually moved the numbers
 
@@ -108,8 +120,8 @@ With both fixes the §12 test passes: inserting one clause mid-document yields e
   for source text MAS left untouched — a PDF reading-order artifact at a line break. The
   risk is a genuine reordering that changes meaning being suppressed. Rare in legal
   drafting, but it is a real trade-off.
-- **Footnotes dropped entirely.** Buys the 0% false-positive rate, costs the two real
-  misses above. Should become "footnotes as their own sections".
+- **Footnotes parsed but off by default.** Buys the 0% false-positive rate at the cost
+  of not alerting on footnote-only changes. Revisit once sub-item extraction is stable.
 - **Section granularity is the decimal clause** (`6.14`), not sub-items (`6.14(a)(i)`).
 
 ## Caveat

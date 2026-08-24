@@ -4,6 +4,7 @@ Every assertion here encodes a bug found on real documents. Synthetic PDFs would
 passed while the parser silently dropped 30% of the corpus.
 """
 import itertools
+import re
 from pathlib import Path
 
 import pytest
@@ -121,6 +122,36 @@ def test_headings_are_attached_and_not_swallowed(sections_2025):
     assert by_key["1.1"].heading == "INTRODUCTION"
     assert by_key["2.1"].heading == "DEFINITIONS"
     assert all(s.heading for s in sections_2025)
+
+
+def test_footnotes_are_excluded_from_clause_bodies(sections_2025):
+    # Footnote renumbering caused 9 of 11 original false positives: MAS shifts every
+    # later marker when one is inserted, so untouched clauses read "institutions4" then
+    # "institutions6".
+    by_key = {s.section_key: s for s in sections_2025}
+    assert "institutions4" not in by_key["6.16"].body
+    assert "institutions6" not in by_key["6.16"].body
+    assert not any(s.section_key.startswith("Footnote") for s in sections_2025)
+
+
+def test_footnotes_are_available_as_their_own_sections():
+    sections = parse_pdf(FIXTURES / "626_2025.pdf", include_footnotes=True)
+    footnotes = [s for s in sections if s.section_key.startswith("Footnote")]
+    assert len(footnotes) >= 10
+    assert footnotes[0].section_key == "Footnote 1"
+    # Bare superscript markers must not be captured as footnote bodies.
+    assert all(len(f.body) > 20 for f in footnotes)
+
+
+def test_footnote_bodies_exclude_stray_marker_digits():
+    footnotes = {
+        s.section_key: s
+        for s in parse_pdf(FIXTURES / "626_2025.pdf", include_footnotes=True)
+        if s.section_key.startswith("Footnote")
+    }
+    # "In the case of a limited liability partnership..." previously accumulated the
+    # trailing marker run "2 3 4 5 3" from surrounding body text.
+    assert not re.search(r"(?:\s\d){3,}\s*$", footnotes["Footnote 2"].body)
 
 
 def test_ordinal_is_document_order(sections_2025):

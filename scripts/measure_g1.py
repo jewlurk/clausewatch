@@ -19,30 +19,37 @@ from parse.sections import parse_pdf
 FIXTURES = ROOT / "ingest" / "tests" / "fixtures"
 
 
-def main() -> int:
-    truth, _ = changed_clauses(FIXTURES / "626_2025_tracked.pdf")
-    old = parse_pdf(FIXTURES / "626_2024.pdf")
-    new = parse_pdf(FIXTURES / "626_2025.pdf")
+def run(truth: set[str], include_footnotes: bool) -> float:
+    old = parse_pdf(FIXTURES / "626_2024.pdf", include_footnotes=include_footnotes)
+    new = parse_pdf(FIXTURES / "626_2025.pdf", include_footnotes=include_footnotes)
     deltas = compute_delta(old, new)
 
+    scope = truth if include_footnotes else {k for k in truth if not k.startswith("Footnote")}
     reported = {d.new_section_key or d.old_section_key for d in deltas}
-    true_positives = reported & truth
-    false_positives = reported - truth
-    false_negatives = truth - reported
+    true_positives = reported & scope
+    false_positives = reported - scope
+    false_negatives = scope - reported
 
     fp_rate = len(false_positives) / len(reported) if reported else 0.0
-    print(f"clauses in 2025 doc : {len(new)}")
-    print(f"MAS says changed    : {len(truth)}")
-    print(f"we report changed   : {len(reported)}")
-    print(f"  true positives    : {len(true_positives)}")
+    label = "WITH footnotes" if include_footnotes else "clauses only (shipping default)"
+    print(f"--- {label} ---")
+    print(f"  sections parsed   : {len(new)}")
+    print(f"  MAS says changed  : {len(scope)}")
+    print(f"  we report changed : {len(reported)}")
     print(f"  FALSE POSITIVES   : {len(false_positives)}  {sorted(false_positives)}")
     print(f"  false negatives   : {len(false_negatives)}  {sorted(false_negatives)}")
+    print(f"  precision {len(true_positives) / len(reported):.1%} | "
+          f"recall {len(true_positives) / len(scope):.1%} | "
+          f"FP rate {fp_rate:.1%}  [gate <5%]")
     print()
-    print(f"precision           : {len(true_positives) / len(reported):.1%}")
-    print(f"recall              : {len(true_positives) / len(truth):.1%}")
-    print(f"FALSE POSITIVE RATE : {fp_rate:.1%}   [G1 target < 5%]")
+    return fp_rate
 
-    return 0 if fp_rate < 0.05 else 1
+
+def main() -> int:
+    truth, _ = changed_clauses(FIXTURES / "626_2025_tracked.pdf")
+    shipping_fp_rate = run(truth, include_footnotes=False)
+    run(truth, include_footnotes=True)
+    return 0 if shipping_fp_rate < 0.05 else 1
 
 
 if __name__ == "__main__":
