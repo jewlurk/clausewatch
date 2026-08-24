@@ -12,6 +12,10 @@ Last updated: 25 August 2026
 - [ ] **R2 API token** → put into GitHub Actions secrets as `R2_ACCESS_KEY_ID` and
       `R2_SECRET_ACCESS_KEY`. Never paste them into chat. Blocks T12 (storing raw PDFs).
       *~10 min*
+- [ ] **Move Supabase to Singapore.** Currently Tokyo (`ap-northeast-1`) — confirmed in
+      the dashboard. Region cannot be changed in place, so it means a new project; free
+      while there is no data. Steps in the session notes. Until this is done the privacy
+      policy cannot state a hosting location. *~15 min*
 
 ## Decisions pending
 
@@ -58,7 +62,7 @@ Last updated: 25 August 2026
 
 ## Done
 
-- [x] Supabase project created, region Singapore
+- [x] Supabase project created (region Tokyo — move to Singapore pending, see above)
 - [x] Migration `0001_init.sql` applied — verified, all 9 tables live
 - [x] Migration `0002_lock_corpus_rls.sql` applied — verified, corpus no longer
       readable or writable with the public key

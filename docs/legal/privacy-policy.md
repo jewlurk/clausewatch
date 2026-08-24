@@ -111,7 +111,7 @@ We do not disclose personal data except:
 
 | Provider | Purpose | Data | Location |
 |---|---|---|---|
-| Supabase | Database and authentication | Account, configuration, usage data | Singapore |
+| Supabase | Database and authentication | Account, configuration, usage data | [PENDING — currently Tokyo (ap-northeast-1); move to Singapore planned] |
 | Cloudflare | Application hosting, object storage, network security | Technical data; raw MAS documents (no personal data) | Global edge network |
 | Resend | Sending alert and service emails | Name, email address, message content | United States |
 | GitHub | Runs the scheduled processing pipeline | No customer personal data | United States |
