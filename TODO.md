@@ -10,7 +10,8 @@ Last updated: 25 August 2026
 
 - [ ] **R2 API token.**
       1. Go to `https://dash.cloudflare.com/453137188783dc5aaf71b39099f195ba/r2/api-tokens`
-      2. **Create API token** → name `mas-delta-crawler`
+      2. **Create API token** → name it anything (`clausewatch-crawler`). The name is a
+         label only you see.
       3. Permission: **Object Read & Write**
       4. Scope: **specific bucket** → `mas-raw`
       5. Create. Copy the **Access Key ID** and **Secret Access Key** (shown once).
@@ -36,10 +37,33 @@ Parked deliberately. None of this stops the build.
       statutory board is a real risk, and ACRA restricts names suggesting government
       connection. The repo codename is fine.
 
-### Official email
-- [ ] Create a dedicated address once the name is settled. Not the school address — it
-      gets revoked and it reads badly to compliance buyers. Must be monitored (PDPA
-      gives people a right to reach the DPO and get a reply within 30 days).
+### Official email — and the domain question
+
+The good handles are gone on Gmail, and a Gmail address is weak for this buyer anyway.
+A domain solves the email, the demo URL, and deliverability in one purchase.
+
+**The budget rule says no domain before Feb 2027. I think this is the exception, and
+here is the case — your call.**
+
+What breaks without a domain, specifically:
+- Outreach to conservative compliance firms comes from `something@gmail.com`. These are
+  people whose job is detecting things that look wrong.
+- Cold email from a free Gmail lands in spam far more often than from a domain with
+  proper SPF/DKIM.
+- The demo link is `*.pages.dev`, which reads as a hobby project to a buyer deciding
+  whether to trust you with a compliance dependency.
+
+Cost: roughly **SGD 15–25/year** for a `.com`. Against a SGD 499/month product, one
+extra reply pays for it many times over.
+
+Recommendation: buy it **before G3 outreach**, not before. It is not needed to build the
+demo, so it does not block anything today.
+
+- [ ] Decide: domain now, or Gmail for the first outreach round
+- [ ] If domain: buy it (Cloudflare Registrar sells at cost), then set up email
+- [ ] Either way the address must be **monitored** — PDPA gives people a right to reach
+      the DPO and get a reply within 30 days
+- [ ] Not the school address; it gets revoked and it reads badly to this buyer
 
 ### Supabase region (Tokyo → Singapore)
 Currently `ap-northeast-1` (Tokyo). Works fine. The only cost of staying is a longer
