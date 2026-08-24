@@ -1,0 +1,23 @@
+# Daily crawl. Two jobs it does once real (T11/T12/T27):
+#   1. fetch MAS instruments, diff new versions, write deltas
+#   2. keep the Supabase free project from pausing (~7-day idle → pause; a daily
+#      touch prevents it — brief §4.2)
+# Until the crawler exists, this runs a no-op keepalive so the schedule is live and
+# the free DB stays awake, without emailing the founder spurious failures.
+name: crawl
+
+on:
+  schedule:
+    - cron: "17 1 * * *" # 01:17 UTC daily (~09:17 SGT), off-peak, avoids the top of the hour
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Keepalive (placeholder until T11/T12 crawler lands)
+        run: echo "crawl pipeline not yet implemented — see backlog T11, T12, T27"

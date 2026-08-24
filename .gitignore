@@ -1,0 +1,30 @@
+# Secrets — never commit
+.env
+.env.local
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Node / TS (api, web)
+node_modules/
+.wrangler/
+dist/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Local scratch — raw PDFs pulled during dev (real fixtures live in ingest/tests/fixtures)
+/scratch/
+*.pdf
+!ingest/tests/fixtures/*.pdf
