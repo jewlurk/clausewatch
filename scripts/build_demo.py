@@ -160,6 +160,15 @@ def sev_class(severity: int) -> str:
 # (see diff/severity.py); this adds the operation and recency dimensions.
 OP_WEIGHT = {"ADDED": 3, "MODIFIED": 3, "REMOVED": 2, "RENUMBERED": 0}
 
+# Slots any single instrument may take in the front-page feed.
+PER_INSTRUMENT_CAP = 3
+EXCERPT_WORDS = 45
+
+
+def excerpt(text: str, words: int = EXCERPT_WORDS) -> str:
+    parts = text.split()
+    return " ".join(parts[:words]) + ("\u2026" if len(parts) > words else "")
+
 
 def importance(op: str, severity: int, revision: date | None, newest: date | None) -> float:
     """Rank a change for the front page. Higher is more worth reading."""
@@ -180,16 +189,34 @@ def render_recent(rows, limit: int = 12) -> str:
         key=lambda r: importance(r[6], r[9], r[4], newest),
         reverse=True,
     )
+    # Cap per instrument. Ranking alone let SFA04-N02's 2025 restatement fill every
+    # slot, which reads as one event rather than as coverage.
+    per_instrument: dict[int, int] = {}
+    selected = []
+    for row in ranked:
+        count = per_instrument.get(row[0], 0)
+        if count >= PER_INSTRUMENT_CAP:
+            continue
+        per_instrument[row[0]] = count + 1
+        selected.append(row)
+        if len(selected) >= limit:
+            break
+
     entries = []
-    for row in ranked[:limit]:
+    for row in selected:
         (_iid, _fid, _tid, _fd, to_date, _eff, op, new_key, old_key, severity,
-         diff_text, _sim, ref, url) = row
+         diff_text, _sim, ref, url, new_body) = row
         key = new_key or old_key or "\u2014"
-        body = (window(diff_text) if diff_text else None) or (
-            '<span class="muted">New clause \u2014 read it at MAS.</span>'
-            if op == "ADDED"
-            else '<span class="muted">Clause removed.</span>'
-        )
+        if diff_text:
+            body = window(diff_text)
+        elif op == "ADDED" and new_body:
+            body = f"<ins>{html.escape(excerpt(new_body))}</ins>"
+        else:
+            body = (
+                '<span class="muted">New clause \u2014 read it at MAS.</span>'
+                if op == "ADDED"
+                else '<span class="muted">Clause removed.</span>'
+            )
         when = f"{to_date:%b %Y}" if to_date else ""
         entries.append(
             f"""  <article class="delta {sev_class(severity)}">
@@ -238,9 +265,10 @@ def fetch(conn):
                    fv.issue_date, tv.issue_date, tv.effective_date,
                    d.op, d.new_section_key, d.old_section_key,
                    d.severity, d.diff_html, d.similarity,
-                   i.external_ref, i.source_url
+                   i.external_ref, i.source_url, ns.body
             from deltas d
             join instruments i on i.id = d.instrument_id
+            left join sections ns on ns.id = d.new_section_id
             join instrument_versions fv on fv.id = d.from_version_id
             join instrument_versions tv on tv.id = d.to_version_id
             order by tv.issue_date desc, d.severity desc, d.new_section_key
