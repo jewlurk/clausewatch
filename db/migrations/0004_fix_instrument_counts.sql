@@ -5,7 +5,12 @@
 -- changes instead of 267. Counting through independent subqueries avoids the
 -- fan-out.
 
-create or replace function public.list_instruments()
+-- Postgres refuses to change a function's return signature in place
+-- ("cannot change return type of existing function"), and this adds version_count,
+-- so the old definition has to go first.
+drop function if exists public.list_instruments();
+
+create function public.list_instruments()
 returns table (
   id bigint, external_ref text, title text, source_url text,
   applies_to text[], latest_revision date, change_count bigint, version_count bigint
