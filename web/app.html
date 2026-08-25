@@ -54,6 +54,9 @@ th{text-align:left;font-size:.64rem;letter-spacing:.12em;text-transform:uppercas
   color:var(--dim);border-bottom:1px solid var(--line);padding:.35rem .4rem}
 td{padding:.35rem .4rem;border-bottom:1px solid var(--line)}
 .hide{display:none}
+.back{display:inline-block;margin-bottom:.6rem;font-size:.9rem;color:var(--dim);
+  text-decoration:none;font-family:var(--mono)}
+.back:hover{color:var(--amber)}
 .sum{margin:0 0 .5rem;color:var(--ink);font-size:1rem;line-height:1.6;max-width:62rem}
 .nosum{margin:0 0 .5rem;color:var(--dim);font-size:.95rem;font-style:italic}
 details{margin-top:.4rem}
@@ -81,10 +84,13 @@ details[open] summary::before{content:"\25BE  "}
 </style>
 
 <div class="wrap">
-  <p class="brand">Clausewatch</p>
+  <p class="brand"><a href="index.html" style="text-decoration:none">Clausewatch</a></p>
+  <p><a class="back" href="index.html">\u2190 Changelogs</a></p>
+
+  <p id="booting" class="dim">Loading\u2026</p>
 
   <!-- ============ signed out ============ -->
-  <section id="auth">
+  <section id="auth" class="hide">
     <h1>Console</h1>
     <div class="card">
       <p class="dim">Sign in with a link sent to your work email. No password to manage.</p>
@@ -222,8 +228,13 @@ $("send").onclick = async () => {
 $("signout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 sb.auth.onAuthStateChange((_e, session) => { if (session) start(session); });
+
+// Resolve the session before showing anything, so a returning user never sees the
+// sign-in panel flash before their console loads.
 const { data: { session } } = await sb.auth.getSession();
+show($("booting"), false);
 if (session) start(session);
+else show($("auth"), true);
 
 async function start(session) {
   show($("auth"), false);
