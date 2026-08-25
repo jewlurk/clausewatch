@@ -35,3 +35,4 @@ dist/
 /web/psn*.html
 /web/sfa*.html
 .claude/launch.json
+.cache/
