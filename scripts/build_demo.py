@@ -182,8 +182,8 @@ def render_recent(rows, limit: int = 12) -> str:
     )
     entries = []
     for row in ranked[:limit]:
-        _iid, _fid, _tid, _fd, to_date, _eff, op, new_key, old_key, severity, diff_text, _sim = row
-        ref, url = row[12], row[13]
+        (_iid, _fid, _tid, _fd, to_date, _eff, op, new_key, old_key, severity,
+         diff_text, _sim, ref, url) = row
         key = new_key or old_key or "\u2014"
         body = (window(diff_text) if diff_text else None) or (
             '<span class="muted">New clause \u2014 read it at MAS.</span>'
