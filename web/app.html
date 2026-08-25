@@ -1,0 +1,335 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clausewatch — console</title>
+<style>
+:root {
+  --bg:#0a0a0b; --panel:#101014; --line:#23232a; --ink:#d6d6dc; --dim:#7c7c88;
+  --amber:#ffa028; --cyan:#4dd0e1; --add:#35d07f; --add-bg:#0d2e1d;
+  --del:#ff6b5e; --del-bg:#331414; --high:#ff4d3d; --med:#ffa028; --low:#3a3a44;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 var(--mono);
+  -webkit-font-smoothing:antialiased}
+a{color:var(--cyan)}
+.wrap{max-width:62rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+.brand{color:var(--amber);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;margin:0}
+h1{font-size:1.05rem;text-transform:uppercase;letter-spacing:.02em;color:#fff;margin:.1rem 0 1rem}
+h2{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);
+  margin:1.6rem 0 .5rem;font-weight:700}
+.dim{color:var(--dim)}
+.err{color:var(--del);margin:.5rem 0}
+.ok{color:var(--add);margin:.5rem 0}
+input,select,textarea,button{font:13px var(--mono);background:#08080a;color:var(--ink);
+  border:1px solid var(--line);padding:.4rem .5rem}
+input,textarea,select{width:100%}
+textarea{min-height:7rem;resize:vertical}
+button{background:var(--amber);color:#000;border:0;font-weight:700;cursor:pointer;
+  text-transform:uppercase;letter-spacing:.08em;padding:.45rem .9rem}
+button.ghost{background:transparent;color:var(--cyan);border:1px solid var(--line);font-weight:400}
+button:disabled{opacity:.5;cursor:default}
+label{display:block;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);margin:.7rem 0 .2rem}
+nav{display:flex;gap:.4rem;border-bottom:1px solid var(--line);margin-bottom:1rem;
+  flex-wrap:wrap}
+nav button{background:transparent;color:var(--dim);border:0;border-bottom:2px solid transparent;
+  padding:.4rem .6rem;font-weight:400}
+nav button.on{color:var(--amber);border-bottom-color:var(--amber);font-weight:700}
+.row{border:1px solid var(--line);border-left:2px solid var(--low);background:var(--panel);
+  padding:.5rem .75rem;margin-bottom:-1px}
+.row.high{border-left-color:var(--high)} .row.med{border-left-color:var(--med)}
+.row header{display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.25rem}
+.k{color:var(--amber);font-weight:700}
+.tagm{color:var(--cyan);border:1px solid var(--line);padding:0 .3rem;font-size:.62rem;
+  letter-spacing:.1em;text-transform:uppercase}
+.op{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
+  border:1px solid var(--line);padding:0 .3rem}
+ins{background:var(--add-bg);color:var(--add);text-decoration:none}
+del{background:var(--del-bg);color:var(--del)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px solid var(--line);padding:.35rem .4rem}
+td{padding:.35rem .4rem;border-bottom:1px solid var(--line)}
+.hide{display:none}
+.card{border:1px solid var(--line);background:var(--panel);padding:.75rem 1rem;max-width:26rem}
+.note{border:1px solid var(--line);background:var(--panel);padding:.6rem .8rem;
+  font-size:11px;color:var(--dim);margin:1rem 0}
+.note strong{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.4rem}
+.pick{border:1px solid var(--line);background:var(--panel);padding:.5rem .65rem;cursor:pointer}
+.pick.on{border-color:var(--amber)}
+.pick .n{color:var(--amber);font-weight:700}
+</style>
+
+<div class="wrap">
+  <p class="brand">Clausewatch</p>
+
+  <!-- ============ signed out ============ -->
+  <section id="auth">
+    <h1>Console</h1>
+    <div class="card">
+      <p class="dim">Sign in with a link sent to your work email. No password to manage.</p>
+      <label for="email">Work email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="you@firm.com.sg">
+      <p><button id="send">Send sign-in link</button></p>
+      <p id="authmsg" class="dim"></p>
+    </div>
+    <div class="note">
+      <strong>Free through 31 March 2027.</strong> From 1 April 2027, SGD 499/month per
+      licensed entity, or SGD 1,200/month for a consultancy licence covering multiple
+      client entities. Cancel anytime. We will give at least 30 days' notice before any
+      charge.
+    </div>
+  </section>
+
+  <!-- ============ signed in ============ -->
+  <section id="app" class="hide">
+    <h1>Console</h1>
+    <p class="dim" id="who"></p>
+    <nav>
+      <button data-tab="changes" class="on">Changes</button>
+      <button data-tab="controls">Control mappings</button>
+      <button data-tab="watch">Watchlist</button>
+      <button data-tab="acct">Account</button>
+    </nav>
+
+    <div id="tab-changes">
+      <p class="dim">Changes to clauses you have mapped a control to, or to instruments
+        on your watchlist. Mapped controls are listed first.</p>
+      <div id="changes"></div>
+    </div>
+
+    <div id="tab-controls" class="hide">
+      <h2>Add mappings</h2>
+      <p class="dim">One per line: <code>INTERNAL REF, INSTRUMENT, CLAUSE</code> —
+        for example <code>AML-POL-4.2, Notice 626, 6.14</code>. Paste a whole control
+        register at once.</p>
+      <textarea id="bulk" placeholder="AML-POL-4.2, Notice 626, 6.14
+SOP-Onboarding-11, PSN01, 6.7
+AML-POL-9, SFA04-N02, 8.1"></textarea>
+      <p><button id="savemaps">Save mappings</button>
+         <span id="mapmsg" class="dim"></span></p>
+      <h2>Your controls</h2>
+      <table><thead><tr><th>Internal ref</th><th>Instrument</th><th>Clause</th><th></th></tr></thead>
+        <tbody id="maps"></tbody></table>
+    </div>
+
+    <div id="tab-watch" class="hide">
+      <h2>Instruments to monitor</h2>
+      <p class="dim">Click to follow. You are alerted to changes at severity 2 and above.</p>
+      <div class="grid" id="watch"></div>
+    </div>
+
+    <div id="tab-acct" class="hide">
+      <h2>Organisation</h2>
+      <label for="orgname">Name</label>
+      <input id="orgname">
+      <p><button id="saveorg" class="ghost">Save</button> <span id="orgmsg" class="dim"></span></p>
+      <div class="note">
+        <strong>Free through 31 March 2027</strong>, then SGD 499/month per licensed
+        entity (SGD 1,200/month consultancy licence). Cancel anytime.
+      </div>
+      <p><button id="signout" class="ghost">Sign out</button></p>
+    </div>
+  </section>
+
+  <div class="note">
+    <strong>Not legal advice.</strong> Clausewatch reports what text changed. It does not
+    interpret legal effect or advise on obligations, and it is not affiliated with the
+    Monetary Authority of Singapore. Where anything here differs from the official MAS
+    publication, the official publication prevails.
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// Publishable key: public by design. Every table is protected by row level security,
+// and all corpus reads go through capped security-definer functions (migration 0003).
+const sb = createClient(
+  "https://psppoaswytqhkdqbudnv.supabase.co",
+  "sb_publishable_4xJeF_hTegqxacOVWATsgQ__y2xEemb",
+);
+
+const $ = (id) => document.getElementById(id);
+const show = (el, on) => el.classList.toggle("hide", !on);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+let instruments = [];
+let orgId = null;
+
+// ---------- auth ----------
+
+$("send").onclick = async () => {
+  const email = $("email").value.trim();
+  if (!email) return;
+  $("send").disabled = true;
+  $("authmsg").textContent = "Sending…";
+  const { error } = await sb.auth.signInWithOtp({
+    email, options: { emailRedirectTo: window.location.href },
+  });
+  $("send").disabled = false;
+  $("authmsg").className = error ? "err" : "ok";
+  $("authmsg").textContent = error
+    ? error.message
+    : "Check your inbox — the link signs you straight in.";
+};
+
+$("signout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+sb.auth.onAuthStateChange((_e, session) => { if (session) start(session); });
+const { data: { session } } = await sb.auth.getSession();
+if (session) start(session);
+
+async function start(session) {
+  show($("auth"), false);
+  show($("app"), true);
+  $("who").textContent = session.user.email;
+
+  const { data, error } = await sb.rpc("bootstrap_org", {
+    org_name: session.user.email.split("@")[1] || "My organisation",
+  });
+  if (error) { $("who").innerHTML += ` <span class="err">${esc(error.message)}</span>`; return; }
+  orgId = data;
+
+  const { data: instr } = await sb.rpc("list_instruments");
+  instruments = instr || [];
+
+  await Promise.all([loadChanges(), loadMaps(), loadWatch(), loadOrg()]);
+  track("login");
+}
+
+// ---------- tabs ----------
+
+document.querySelectorAll("nav button").forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll("nav button").forEach((x) => x.classList.remove("on"));
+    b.classList.add("on");
+    ["changes", "controls", "watch", "acct"].forEach((t) =>
+      show($("tab-" + t), t === b.dataset.tab));
+  };
+});
+
+// ---------- changes ----------
+
+async function loadChanges() {
+  const { data, error } = await sb.rpc("my_changes", { max_rows: 200 });
+  if (error) { $("changes").innerHTML = `<p class="err">${esc(error.message)}</p>`; return; }
+  if (!data || !data.length) {
+    $("changes").innerHTML = `<div class="note">Nothing yet. Add control mappings or
+      follow an instrument, and changes affecting you will appear here.</div>`;
+    return;
+  }
+  $("changes").innerHTML = data.map((c) => {
+    const sev = c.severity >= 4 ? "high" : c.severity === 3 ? "med" : "";
+    const ref = c.internal_ref
+      ? `<span class="tagm">${esc(c.internal_ref)}</span>` : "";
+    const eff = c.effective_date ? ` · effective ${esc(c.effective_date)}` : "";
+    return `<article class="row ${sev}">
+      <header>${ref}<span class="k">${esc(c.instrument_ref)} ${esc(c.section_key)}</span>
+        <span class="op">${esc(c.op)}</span>
+        <span class="dim">${esc(c.revision_date || "")}${eff}</span>
+        <a href="${esc(c.source_url)}">MAS</a></header>
+      <div>${c.diff_html || '<span class="dim">See the official text at MAS.</span>'}</div>
+    </article>`;
+  }).join("");
+  track("alert_viewed", { count: data.length });
+}
+
+// ---------- control mappings ----------
+
+$("savemaps").onclick = async () => {
+  const lines = $("bulk").value.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return;
+  const rows = [], bad = [];
+  for (const line of lines) {
+    const parts = line.split(",").map((p) => p.trim());
+    if (parts.length < 3) { bad.push(line); continue; }
+    const [internal, instrName, clause] = parts;
+    const inst = instruments.find(
+      (i) => i.external_ref.toLowerCase() === instrName.toLowerCase());
+    if (!inst) { bad.push(line + "  (unknown instrument)"); continue; }
+    rows.push({ org_id: orgId, instrument_id: inst.id, section_key: clause,
+                internal_ref: internal });
+  }
+  if (rows.length) {
+    const { error } = await sb.from("control_mappings")
+      .upsert(rows, { onConflict: "org_id,instrument_id,section_key,internal_ref" });
+    if (error) { $("mapmsg").className = "err"; $("mapmsg").textContent = error.message; return; }
+    track("mapping_created", { count: rows.length });
+  }
+  $("mapmsg").className = bad.length ? "err" : "ok";
+  $("mapmsg").textContent = `${rows.length} saved` +
+    (bad.length ? ` · ${bad.length} skipped: ${bad[0]}` : "");
+  if (!bad.length) $("bulk").value = "";
+  await loadMaps(); await loadChanges();
+};
+
+async function loadMaps() {
+  const { data } = await sb.from("control_mappings")
+    .select("id,instrument_id,section_key,internal_ref").order("internal_ref");
+  $("maps").innerHTML = (data || []).map((m) => {
+    const inst = instruments.find((i) => i.id === m.instrument_id);
+    return `<tr><td class="k">${esc(m.internal_ref)}</td>
+      <td>${esc(inst ? inst.external_ref : m.instrument_id)}</td>
+      <td>${esc(m.section_key)}</td>
+      <td><a href="#" data-del="${m.id}">remove</a></td></tr>`;
+  }).join("") || `<tr><td colspan="4" class="dim">No mappings yet.</td></tr>`;
+
+  $("maps").querySelectorAll("[data-del]").forEach((a) => {
+    a.onclick = async (e) => {
+      e.preventDefault();
+      await sb.from("control_mappings").delete().eq("id", a.dataset.del);
+      await loadMaps(); await loadChanges();
+    };
+  });
+}
+
+// ---------- watchlist ----------
+
+async function loadWatch() {
+  const { data } = await sb.from("watchlists").select("id,instrument_id");
+  const following = new Set((data || []).map((w) => w.instrument_id));
+  $("watch").innerHTML = instruments.map((i) => `
+    <div class="pick ${following.has(i.id) ? "on" : ""}" data-i="${i.id}">
+      <div class="n">${esc(i.external_ref)}</div>
+      <div class="dim">${i.change_count} changes · ${following.has(i.id) ? "following" : "not followed"}</div>
+    </div>`).join("");
+
+  $("watch").querySelectorAll(".pick").forEach((el) => {
+    el.onclick = async () => {
+      const id = Number(el.dataset.i);
+      if (following.has(id)) {
+        await sb.from("watchlists").delete().eq("instrument_id", id).eq("org_id", orgId);
+      } else {
+        await sb.from("watchlists").insert({ org_id: orgId, instrument_id: id });
+      }
+      await loadWatch(); await loadChanges();
+    };
+  });
+}
+
+// ---------- account ----------
+
+async function loadOrg() {
+  const { data } = await sb.from("organisations").select("id,name").limit(1);
+  if (data && data[0]) $("orgname").value = data[0].name;
+}
+
+$("saveorg").onclick = async () => {
+  const { error } = await sb.from("organisations")
+    .update({ name: $("orgname").value }).eq("id", orgId);
+  $("orgmsg").className = error ? "err" : "ok";
+  $("orgmsg").textContent = error ? error.message : "Saved";
+};
+
+// ---------- usage events ----------
+// Recorded from day one: retrofitting analytics loses the months that decide who
+// converts in March 2027.
+function track(event_type, metadata = {}) {
+  if (!orgId) return;
+  sb.from("usage_events").insert({ org_id: orgId, event_type, metadata });
+}
+</script>

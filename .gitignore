@@ -28,3 +28,9 @@ dist/
 /scratch/
 *.pdf
 !ingest/tests/fixtures/*.pdf
+
+# Generated changelog pages (built by scripts/build_demo.py in CI)
+/web/index.html
+/web/notice-*.html
+/web/psn*.html
+/web/sfa*.html
