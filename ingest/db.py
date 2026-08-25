@@ -295,3 +295,42 @@ class PostgresVersionRepository:
             )
             row = cur.fetchone()
         return row[0] if row else None
+
+    # ---------- enrichment ----------
+
+    def deltas_needing_summary(self, limit: int = 500) -> list[dict]:
+        """Material changes that have no summary yet.
+
+        Severity >= 3 only (§10), so cosmetic changes never reach a paid API call.
+        Ordered newest-first: if the budget runs out, the changes a customer is most
+        likely to be looking at are the ones that got summarised.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                select d.id, i.external_ref,
+                       coalesce(d.new_section_key, d.old_section_key) as section_key,
+                       os.body as old_body, ns.body as new_body
+                  from deltas d
+                  join instruments i on i.id = d.instrument_id
+                  join instrument_versions tv on tv.id = d.to_version_id
+                  left join sections os on os.id = d.old_section_id
+                  left join sections ns on ns.id = d.new_section_id
+                 where d.severity >= 3 and d.ai_summary is null
+                 order by tv.issue_date desc nulls last, d.severity desc
+                 limit %s
+                """,
+                (limit,),
+            )
+            cols = [c.name for c in cur.description]
+            return [dict(zip(cols, row, strict=True)) for row in cur.fetchall()]
+
+    def save_summary(
+        self, delta_id: int, *, summary: str, obligation_change: bool, action_hint: str
+    ) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "update deltas set ai_summary = %s, obligation_change = %s, "
+                "ai_action_hint = %s where id = %s",
+                (summary, obligation_change, action_hint or None, delta_id),
+            )

@@ -104,6 +104,9 @@ h2 { font-size: 13px; margin: 0 0 .1rem; color: #fff; letter-spacing: .04em; }
 .op { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
   color: var(--dim); border: 1px solid var(--line); padding: 0 .3rem; }
 .moved, .sim { font-size: 11px; color: var(--dim); }
+.sum { margin: 0 0 .35rem; color: var(--ink); font-size: 12.5px; }
+.ob { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  color: #000; background: var(--amber); padding: 0 .3rem; font-weight: 700; }
 .src { color: var(--amber); text-decoration: none; font-weight: 700; }
 .text { font-size: 12px; line-height: 1.55; }
 ins { background: var(--amber-bg); color: var(--amber); text-decoration: none; }
@@ -213,7 +216,7 @@ def render_recent(rows, limit: int = 12) -> str:
     entries = []
     for row in selected:
         (_iid, _fid, _tid, _fd, to_date, _eff, op, new_key, old_key, severity,
-         diff_text, _sim, ref, url, new_body) = row
+         diff_text, _sim, ref, url, new_body, ai_summary, obligation) = row
         key = new_key or old_key or "\u2014"
         if diff_text:
             body = window(diff_text)
@@ -226,12 +229,17 @@ def render_recent(rows, limit: int = 12) -> str:
                 else '<span class="muted">Clause removed.</span>'
             )
         when = f"{to_date:%b %Y}" if to_date else ""
+        summary = (
+            f'<p class="sum">{html.escape(ai_summary)}</p>' if ai_summary else ""
+        )
+        flag = '<span class="ob">obligation</span>' if obligation else ""
         entries.append(
             f"""  <article class="delta {sev_class(severity)}">
     <header><a class="src" href="{html.escape(url)}">{html.escape(ref)}</a>
       <span class="clause">{html.escape(key)}</span>
-      <span class="op">{OP_LABEL.get(op, op)}</span>
+      <span class="op">{OP_LABEL.get(op, op)}</span>{flag}
       <span class="sim">{when}</span></header>
+{summary}
     <div class="text">{body}</div>
   </article>"""
         )
@@ -273,7 +281,8 @@ def fetch(conn):
                    fv.issue_date, tv.issue_date, tv.effective_date,
                    d.op, d.new_section_key, d.old_section_key,
                    d.severity, d.diff_html, d.similarity,
-                   i.external_ref, i.source_url, ns.body
+                   i.external_ref, i.source_url, ns.body,
+                   d.ai_summary, d.obligation_change
             from deltas d
             join instruments i on i.id = d.instrument_id
             left join sections ns on ns.id = d.new_section_id
@@ -306,7 +315,8 @@ def render_instrument(instrument, rows, counts):
 
     grouped: dict[tuple, list] = {}
     for row in rows:
-        grouped.setdefault((row[1], row[2], row[3], row[4], row[5]), []).append(row[6:12])
+        grouped.setdefault((row[1], row[2], row[3], row[4], row[5]), []).append(
+            (*row[6:12], row[14]))
 
     sections_html = []
     for (_fid, to_id, from_date, to_date, effective), items in grouped.items():
@@ -315,7 +325,7 @@ def render_instrument(instrument, rows, counts):
         shown, hidden = items[:cap], max(0, len(items) - cap)
 
         entries = []
-        for op, new_key, old_key, severity, diff_text, similarity in shown:
+        for op, new_key, old_key, severity, diff_text, similarity, ai_summary in shown:
             key = new_key or old_key or "—"
             moved = (
                 f'<span class="moved">was {html.escape(old_key)}</span>'
@@ -334,10 +344,14 @@ def render_instrument(instrument, rows, counts):
                 if similarity is not None
                 else ""
             )
+            summary = (
+                f'<p class="sum">{html.escape(ai_summary)}</p>' if ai_summary else ""
+            )
             entries.append(
                 f"""    <article class="delta {sev_class(severity)}">
       <header><span class="clause">{html.escape(key)}</span>
         <span class="op">{OP_LABEL.get(op, op)}</span>{moved}{sim}</header>
+{summary}
       <div class="text">{body}</div>
     </article>"""
             )

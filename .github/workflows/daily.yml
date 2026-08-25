@@ -56,6 +56,12 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: python scripts/build_corpus.py
 
+      - name: Summarise material changes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/enrich.py
+
       - name: Build site
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

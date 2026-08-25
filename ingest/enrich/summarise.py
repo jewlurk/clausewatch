@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +44,10 @@ PRESCRIPTIVE = (
     "ensure that you", "make sure you", "it is advisable", "should now",
 )
 
-MODEL = os.environ.get("LLM_MODEL", "claude-opus-5")
+# Haiku 4.5: these are one-line descriptive summaries, not reasoning work, and it is
+# roughly a fifth the cost of the Opus tier. Note it predates the effort parameter —
+# `output_config` is rejected on this model, which is why the request below sends none.
+MODEL = os.environ.get("LLM_MODEL", "claude-haiku-4-5")
 MIN_SEVERITY = 3  # §10: the LLM only ever sees severity >= 3
 
 
@@ -85,6 +89,21 @@ class EnrichmentBudget:
         )
 
 
+def parse_summary(text: str) -> ChangeSummary | None:
+    """Parse and validate the model's JSON. Returns None rather than a partial result.
+
+    Models occasionally wrap JSON in markdown fences despite being told not to, so the
+    first {...} block is extracted rather than trusting the whole response to be JSON.
+    """
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        return ChangeSummary.model_validate_json(match.group(0))
+    except ValidationError:
+        return None
+
+
 def is_prescriptive(text: str) -> bool:
     lowered = " ".join(text.lower().split())
     return any(phrase in lowered for phrase in PRESCRIPTIVE)
@@ -117,21 +136,30 @@ def summarise_change(
         f"NEW VERSION:\n{_trim(new_body or '(clause was removed)', 400)}"
     )
 
-    try:
-        response = client.messages.parse(
-            model=MODEL,
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            output_config={"effort": "low"},
-            messages=[{"role": "user", "content": prompt}],
-            output_format=ChangeSummary,
-        )
-    except Exception as exc:  # noqa: BLE001 - one failure must not stop the batch
-        log.warning("enrichment failed for %s %s: %s", instrument_ref, section_key, exc)
-        return None
+    # §10: validate against the schema, reject and retry once, and never store
+    # unparsed model output. Parsed explicitly rather than via the SDK's structured
+    # outputs helper, which is not available across every model tier.
+    result = None
+    for attempt in (1, 2):
+        try:
+            response = client.messages.create(
+                model=MODEL,
+                max_tokens=512,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as exc:  # noqa: BLE001 - one failure must not stop the batch
+            log.warning("enrichment call failed %s %s: %s", instrument_ref, section_key, exc)
+            return None
 
-    budget.record(response.usage)
-    result = response.parsed_output
+        budget.record(response.usage)
+        text = "".join(b.text for b in response.content if b.type == "text")
+        result = parse_summary(text)
+        if result is not None:
+            break
+        log.info("unparseable summary (attempt %d) for %s %s",
+                 attempt, instrument_ref, section_key)
+
     if result is None:
         return None
 
