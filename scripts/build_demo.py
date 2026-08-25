@@ -40,10 +40,8 @@ STYLE = """
    compliance officer is scanning for a clause number, not admiring a layout.
    Dark only; a terminal has no light mode. */
 :root {
-  --bg: #0a0a0b; --panel: #101014; --line: #23232a;
-  --ink: #d6d6dc; --dim: #7c7c88; --amber: #ffa028; --cyan: #4dd0e1;
-  --add: #35d07f; --add-bg: #0d2e1d; --del: #ff6b5e; --del-bg: #331414;
-  --high: #ff4d3d; --med: #ffa028; --low: #3a3a44;
+  --bg:#000000; --panel:#0c0c0c; --line:#262626; --ink:#e8e8e8; --dim:#8a8a8a;
+  --amber:#ff9500; --amber-dim:#b36800; --amber-bg:#2b1a00;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
@@ -53,7 +51,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 .wrap { max-width: 62rem; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
-a { color: var(--cyan); }
+a { color: var(--amber); }
 
 /* masthead */
 .brand { color: var(--amber); font-size: .72rem; letter-spacing: .22em;
@@ -90,26 +88,26 @@ h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; margin: 0 0 .3
   letter-spacing: .04em; text-transform: uppercase; }
 .card .meta { margin: 0; }
 .tag { display: inline-block; font-size: .62rem; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--cyan); border: 1px solid var(--line);
+  text-transform: uppercase; color: var(--amber); border: 1px solid var(--line);
   padding: 0 .3rem; margin-right: .25rem; }
 
 /* delta rows */
 .comparison { margin-bottom: 1.75rem; }
 h2 { font-size: 13px; margin: 0 0 .1rem; color: #fff; letter-spacing: .04em; }
-.delta { border: 1px solid var(--line); border-left: 2px solid var(--low);
+.delta { border: 1px solid var(--line); border-left: 2px solid var(--line);
   background: var(--panel); padding: .5rem .75rem; margin-bottom: -1px; }
-.delta.high { border-left-color: var(--high); }
-.delta.med { border-left-color: var(--med); }
+.delta.high { border-left-color: var(--amber); }
+.delta.med { border-left-color: var(--amber-dim); }
 .delta header { display: flex; gap: .5rem; align-items: baseline;
   flex-wrap: wrap; margin-bottom: .3rem; }
 .clause { font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
 .op { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
   color: var(--dim); border: 1px solid var(--line); padding: 0 .3rem; }
 .moved, .sim { font-size: 11px; color: var(--dim); }
-.src { color: var(--cyan); text-decoration: none; font-weight: 700; }
+.src { color: var(--amber); text-decoration: none; font-weight: 700; }
 .text { font-size: 12px; line-height: 1.55; }
-ins { background: var(--add-bg); color: var(--add); text-decoration: none; }
-del { background: var(--del-bg); color: var(--del); }
+ins { background: var(--amber-bg); color: var(--amber); text-decoration: none; }
+del { background: transparent; color: var(--dim); text-decoration: line-through; }
 .muted, .gap { color: var(--dim); }
 .more { font-size: 11px; color: var(--dim); margin: .5rem 0 0; }
 .back { display: inline-block; margin-bottom: .8rem; font-size: 11px;

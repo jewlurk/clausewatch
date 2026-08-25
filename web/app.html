@@ -4,30 +4,29 @@
 <title>Clausewatch — console</title>
 <style>
 :root {
-  --bg:#0a0a0b; --panel:#101014; --line:#23232a; --ink:#d6d6dc; --dim:#7c7c88;
-  --amber:#ffa028; --cyan:#4dd0e1; --add:#35d07f; --add-bg:#0d2e1d;
-  --del:#ff6b5e; --del-bg:#331414; --high:#ff4d3d; --med:#ffa028; --low:#3a3a44;
+  --bg:#000000; --panel:#0c0c0c; --line:#262626; --ink:#e8e8e8; --dim:#8a8a8a;
+  --amber:#ff9500; --amber-dim:#b36800; --amber-bg:#2b1a00;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 var(--mono);
   -webkit-font-smoothing:antialiased}
-a{color:var(--cyan)}
+a{color:var(--amber)}
 .wrap{max-width:62rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
 .brand{color:var(--amber);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;margin:0}
 h1{font-size:1.05rem;text-transform:uppercase;letter-spacing:.02em;color:#fff;margin:.1rem 0 1rem}
 h2{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);
   margin:1.6rem 0 .5rem;font-weight:700}
 .dim{color:var(--dim)}
-.err{color:var(--del);margin:.5rem 0}
-.ok{color:var(--add);margin:.5rem 0}
+.err{color:var(--dim);margin:.5rem 0}
+.ok{color:var(--amber);margin:.5rem 0}
 input,select,textarea,button{font:13px var(--mono);background:#08080a;color:var(--ink);
   border:1px solid var(--line);padding:.4rem .5rem}
 input,textarea,select{width:100%}
 textarea{min-height:7rem;resize:vertical}
 button{background:var(--amber);color:#000;border:0;font-weight:700;cursor:pointer;
   text-transform:uppercase;letter-spacing:.08em;padding:.45rem .9rem}
-button.ghost{background:transparent;color:var(--cyan);border:1px solid var(--line);font-weight:400}
+button.ghost{background:transparent;color:var(--amber);border:1px solid var(--line);font-weight:400}
 button:disabled{opacity:.5;cursor:default}
 label{display:block;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
   color:var(--dim);margin:.7rem 0 .2rem}
@@ -36,17 +35,17 @@ nav{display:flex;gap:.4rem;border-bottom:1px solid var(--line);margin-bottom:1re
 nav button{background:transparent;color:var(--dim);border:0;border-bottom:2px solid transparent;
   padding:.4rem .6rem;font-weight:400}
 nav button.on{color:var(--amber);border-bottom-color:var(--amber);font-weight:700}
-.row{border:1px solid var(--line);border-left:2px solid var(--low);background:var(--panel);
+.row{border:1px solid var(--line);border-left:2px solid var(--line);background:var(--panel);
   padding:.5rem .75rem;margin-bottom:-1px}
-.row.high{border-left-color:var(--high)} .row.med{border-left-color:var(--med)}
+.row.high{border-left-color:var(--amber)} .row.med{border-left-color:var(--amber-dim)}
 .row header{display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.25rem}
 .k{color:var(--amber);font-weight:700}
-.tagm{color:var(--cyan);border:1px solid var(--line);padding:0 .3rem;font-size:.62rem;
+.tagm{color:var(--amber);border:1px solid var(--line);padding:0 .3rem;font-size:.62rem;
   letter-spacing:.1em;text-transform:uppercase}
 .op{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
   border:1px solid var(--line);padding:0 .3rem}
-ins{background:var(--add-bg);color:var(--add);text-decoration:none}
-del{background:var(--del-bg);color:var(--del)}
+ins{background:var(--amber-bg);color:var(--amber);text-decoration:none}
+del{background:transparent;color:var(--dim);text-decoration:line-through}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
   color:var(--dim);border-bottom:1px solid var(--line);padding:.35rem .4rem}
