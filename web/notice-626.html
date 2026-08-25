@@ -4,78 +4,88 @@
 <title>MAS Notice 626 — clause-level changelog | Clausewatch</title>
 <meta name="description" content="Every clause-level change to MAS Notice 626, from the official versions.">
 <style>
+/* Terminal aesthetic: dark, dense, monospace, amber. Information-first — a
+   compliance officer is scanning for a clause number, not admiring a layout.
+   Dark only; a terminal has no light mode. */
 :root {
-  --ink: #12161c; --muted: #5b6673; --line: #e3e7ec; --bg: #fbfcfd;
-  --add: #10693a; --add-bg: #e6f4ec; --del: #96261f; --del-bg: #fbeceb;
-  --high: #96261f; --med: #a86413; --low: #96a1ae; --accent: #1d4ed8;
+  --bg: #0a0a0b; --panel: #101014; --line: #23232a;
+  --ink: #d6d6dc; --dim: #7c7c88; --amber: #ffa028; --cyan: #4dd0e1;
+  --add: #35d07f; --add-bg: #0d2e1d; --del: #ff6b5e; --del-bg: #331414;
+  --high: #ff4d3d; --med: #ffa028; --low: #3a3a44;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Georgia, serif;
+  font: 13px/1.5 var(--mono);
   -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 46rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
-h1 { font-size: 2.05rem; line-height: 1.18; margin: 0 0 .6rem; letter-spacing: -.022em; }
-h2 { font-size: 1.22rem; margin: 0 0 .2rem; letter-spacing: -.01em; }
-.lede { color: var(--muted); margin: 0 0 2.5rem; font-size: 1.05rem; }
-.brand { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--muted); margin: 0 0 1.4rem; }
-.brand a { text-decoration: none; }
-.summary { border: 1px solid var(--line); background: #fff; border-radius: 6px;
-  padding: 1.2rem 1.4rem; margin-bottom: 2.75rem; }
-.summary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1rem; margin: 0; }
-.summary dt { font-size: .74rem; letter-spacing: .09em; text-transform: uppercase;
-  color: var(--muted); }
-.summary dd { margin: .15rem 0 0; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-.card { display: block; border: 1px solid var(--line); background: #fff;
-  border-radius: 6px; padding: 1.1rem 1.3rem; margin-bottom: .85rem;
-  text-decoration: none; color: inherit; }
-.card:hover { border-color: var(--accent); }
-.card h2 { margin-bottom: .15rem; }
+.wrap { max-width: 62rem; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+a { color: var(--cyan); }
+
+/* masthead */
+.brand { color: var(--amber); font-size: .72rem; letter-spacing: .22em;
+  text-transform: uppercase; margin: 0 0 .1rem; }
+h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; margin: 0 0 .35rem;
+  text-transform: uppercase; color: #fff; }
+.lede { color: var(--dim); margin: 0 0 1.25rem; max-width: 60ch; font-size: 12px; }
+.rule { border: 0; border-top: 1px solid var(--line); margin: 0 0 1rem; }
+
+/* stat strip */
+.summary { border: 1px solid var(--line); background: var(--panel); margin-bottom: 1.5rem; }
+.summary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0; margin: 0; }
+.summary div { padding: .6rem .85rem; border-right: 1px solid var(--line); }
+.summary div:last-child { border-right: 0; }
+.summary dt { font-size: .64rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--dim); }
+.summary dd { margin: .2rem 0 0; font-size: 1.15rem; color: var(--amber);
+  font-variant-numeric: tabular-nums; }
+.checked { margin: 0; padding: .5rem .85rem; border-top: 1px solid var(--line);
+  font-size: 11px; color: var(--dim); }
+.checked strong { color: var(--ink); }
+
+/* section headers */
+.section { margin: 1.75rem 0 .2rem; font-size: .72rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--amber); font-weight: 700; }
+.meta { color: var(--dim); font-size: 11px; margin: 0 0 .7rem; }
+
+/* instrument cards */
+.card { display: block; border: 1px solid var(--line); background: var(--panel);
+  padding: .6rem .85rem; margin-bottom: -1px; text-decoration: none; color: inherit; }
+.card:hover { background: #16161c; border-color: var(--amber); position: relative; }
+.card h2 { margin: 0 0 .15rem; font-size: 13px; color: var(--amber);
+  letter-spacing: .04em; text-transform: uppercase; }
 .card .meta { margin: 0; }
-.tag { display: inline-block; font-size: .72rem; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--muted); border: 1px solid var(--line);
-  border-radius: 3px; padding: .05rem .4rem; margin-right: .3rem; }
-.comparison { margin-bottom: 3.25rem; }
-.meta { color: var(--muted); font-size: .92rem; margin: 0 0 1.15rem; }
-.delta { border-left: 3px solid var(--low); background: #fff;
-  border-radius: 0 4px 4px 0; padding: .85rem 1.05rem; margin-bottom: .85rem;
-  border-top: 1px solid var(--line); border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line); }
+.tag { display: inline-block; font-size: .62rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--cyan); border: 1px solid var(--line);
+  padding: 0 .3rem; margin-right: .25rem; }
+
+/* delta rows */
+.comparison { margin-bottom: 1.75rem; }
+h2 { font-size: 13px; margin: 0 0 .1rem; color: #fff; letter-spacing: .04em; }
+.delta { border: 1px solid var(--line); border-left: 2px solid var(--low);
+  background: var(--panel); padding: .5rem .75rem; margin-bottom: -1px; }
 .delta.high { border-left-color: var(--high); }
 .delta.med { border-left-color: var(--med); }
-.delta header { display: flex; gap: .55rem; align-items: baseline;
-  flex-wrap: wrap; margin-bottom: .45rem; }
-.clause { font-weight: 700; font-variant-numeric: tabular-nums; }
-.op { font-size: .72rem; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--muted); border: 1px solid var(--line); border-radius: 3px;
-  padding: .05rem .4rem; }
-.moved, .sim { font-size: .8rem; color: var(--muted); }
-.text { font-size: .95rem; }
-ins { background: var(--add-bg); color: var(--add); text-decoration: none;
-  padding: .05em .12em; border-radius: 2px; }
-del { background: var(--del-bg); color: var(--del); padding: .05em .12em;
-  border-radius: 2px; }
-.muted { color: var(--muted); }
-.gap { color: var(--muted); font-size: .85em; }
-.more { font-size: .9rem; font-style: italic; }
-.checked { margin: 1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--line);
-  font-size: .88rem; color: var(--muted); }
-.section { margin: 2.75rem 0 .3rem; font-size: 1.05rem; letter-spacing: .01em; }
-.src { font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--line); }
-.back { display: inline-block; margin-bottom: 1.4rem; font-size: .9rem;
-  color: var(--muted); }
-footer { border-top: 1px solid var(--line); margin-top: 4rem; padding-top: 1.4rem;
-  color: var(--muted); font-size: .86rem; }
-a { color: inherit; }
-@media (prefers-color-scheme: dark) {
-  :root { --ink: #e6e9ee; --muted: #9aa4b1; --line: #262c35; --bg: #0e1116;
-    --add: #6fd39b; --add-bg: #12301f; --del: #f3968f; --del-bg: #331616;
-    --accent: #7ba3ff; }
-  .summary, .delta, .card { background: #141920; }
-}
+.delta header { display: flex; gap: .5rem; align-items: baseline;
+  flex-wrap: wrap; margin-bottom: .3rem; }
+.clause { font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
+.op { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dim); border: 1px solid var(--line); padding: 0 .3rem; }
+.moved, .sim { font-size: 11px; color: var(--dim); }
+.src { color: var(--cyan); text-decoration: none; font-weight: 700; }
+.text { font-size: 12px; line-height: 1.55; }
+ins { background: var(--add-bg); color: var(--add); text-decoration: none; }
+del { background: var(--del-bg); color: var(--del); }
+.muted, .gap { color: var(--dim); }
+.more { font-size: 11px; color: var(--dim); margin: .5rem 0 0; }
+.back { display: inline-block; margin-bottom: .8rem; font-size: 11px;
+  color: var(--dim); text-decoration: none; }
+
+footer { border-top: 1px solid var(--line); margin-top: 2.5rem; padding-top: .9rem;
+  color: var(--dim); font-size: 11px; }
+footer strong { color: var(--ink); }
 </style>
 <div class="wrap">
 <p class="brand"><a href="index.html">Clausewatch</a></p>
@@ -86,9 +96,9 @@ has published, reconstructed automatically from the official documents.
 <a href="https://www.mas.gov.sg/regulation/notices/notice-626">Official page at MAS →</a></p>
 
 <div class="summary"><dl>
-  <dt>Versions compared</dt><dd>7</dd>
-  <dt>Clause changes</dt><dd>267</dd>
-  <dt>Latest revision</dt><dd>Jun 2025</dd>
+  <div><dt>Versions</dt><dd>7</dd></div>
+  <div><dt>Clause changes</dt><dd>267</dd></div>
+  <div><dt>Latest revision</dt><dd>Jun 2025</dd></div>
 </dl></div>
 
   <section class="comparison">

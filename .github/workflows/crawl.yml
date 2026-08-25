@@ -21,6 +21,10 @@ on:
         description: "Parse stored documents into sections and compute deltas"
         type: boolean
         default: false
+      migration:
+        description: "Migration to apply, e.g. 0003_tenant_app (blank = none)"
+        type: string
+        default: ""
 
 env:
   # Not a secret: the account id appears in every dashboard URL and in the S3 endpoint.
@@ -51,6 +55,11 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/check_db.py
+      - name: Apply migration
+        if: github.event_name == 'workflow_dispatch' && inputs.migration != ''
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/apply_migration.py "${{ inputs.migration }}"
       - name: Backfill all tracked instruments (T14)
         if: github.event_name == 'workflow_dispatch' && inputs.backfill_626
         env:
