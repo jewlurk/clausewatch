@@ -1,21 +1,30 @@
 """Instruments we track.
 
-Scope is deliberately Singapore AML/CFT across every institution type MAS regulates.
-That makes one coherent story for a buyer — "we cover your AML/CFT obligations,
-whichever licence you hold" — and it matches the target segments directly: banks
-(626), payment institutions (PSN01), digital payment token services (PSN02), and
-capital markets intermediaries including fund managers (SFA04-N02).
+Scope: every **active** MAS AML/CFT notice — one per licensed entity type. That makes a
+single coherent promise to a buyer ("your AML/CFT obligations, whichever licence you
+hold") and covers essentially every MAS-regulated firm, without drifting into unrelated
+regulation whose documents are structured differently and whose accuracy we have not
+measured.
 
-Landing URLs verified live 2026-08-25. They are not guessable: SFA04-N02 sits at
-`notice-sfa-04-n02` with hyphens the other notices do not use, so every URL here was
-confirmed by fetching it.
+Two notices are deliberately absent. Notice 3001 (money-changers and remittance) and
+PSOA-N02 (stored value facilities) are marked **[Cancelled]** by MAS — superseded by
+the Payment Services Act regime now covered by PSN01 and PSN02. Letting a customer
+follow a dead notice would be worse than not covering it.
 
-`applies_to` feeds watchlists by entity category (schema §8), so a customer can follow
-"everything that applies to a major payment institution" instead of naming instruments.
+Every landing URL and title here was read from the live MAS page, not constructed.
+That caught two errors worth noting: Notice 626A binds **credit and charge card
+licensees**, not merchant banks (that is Notice 1014), and SFA13-N01 sits at
+`notice-sfa-13-n01` with hyphens the other notices do not use.
+
+`applies_to` drives watchlists by entity category, so a firm can follow "everything
+that applies to a licensed trust company" rather than naming instruments.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+
+BASE = "https://www.mas.gov.sg/regulation/notices/"
+AML = "Prevention of Money Laundering and Countering the Financing of Terrorism"
 
 
 @dataclass(frozen=True)
@@ -23,62 +32,38 @@ class InstrumentSpec:
     external_ref: str
     title: str
     landing_url: str
+    audience: str  # plain-English "who this binds", shown in the console
     instrument_type: str = "notice"
     applies_to: tuple[str, ...] = field(default_factory=tuple)
 
 
+def _spec(ref: str, slug: str, audience: str, *applies: str) -> InstrumentSpec:
+    return InstrumentSpec(
+        external_ref=ref,
+        title=f"{AML} - {audience}",
+        landing_url=BASE + slug,
+        audience=audience,
+        applies_to=applies,
+    )
+
+
 MAS_INSTRUMENTS: tuple[InstrumentSpec, ...] = (
-    InstrumentSpec(
-        external_ref="Notice 626",
-        title=(
-            "Prevention of Money Laundering and Countering the Financing of "
-            "Terrorism - Banks"
-        ),
-        landing_url="https://www.mas.gov.sg/regulation/notices/notice-626",
-        applies_to=("bank",),
-    ),
-    InstrumentSpec(
-        external_ref="Notice 626A",
-        title=(
-            "Prevention of Money Laundering and Countering the Financing of "
-            "Terrorism - Merchant Banks"
-        ),
-        landing_url="https://www.mas.gov.sg/regulation/notices/notice-626a",
-        applies_to=("merchant_bank",),
-    ),
-    InstrumentSpec(
-        external_ref="PSN01",
-        title=(
-            "Prevention of Money Laundering and Countering the Financing of "
-            "Terrorism - Specified Payment Services"
-        ),
-        landing_url=(
-            "https://www.mas.gov.sg/regulation/notices/"
-            "psn01-aml-cft-notice---specified-payment-services"
-        ),
-        applies_to=("payment_institution",),
-    ),
-    InstrumentSpec(
-        external_ref="PSN02",
-        title=(
-            "Prevention of Money Laundering and Countering the Financing of "
-            "Terrorism - Digital Payment Token Service"
-        ),
-        landing_url=(
-            "https://www.mas.gov.sg/regulation/notices/"
-            "psn02-aml-cft-notice---digital-payment-token-service"
-        ),
-        applies_to=("digital_payment_token_service",),
-    ),
-    InstrumentSpec(
-        external_ref="SFA04-N02",
-        title=(
-            "Prevention of Money Laundering and Countering the Financing of "
-            "Terrorism - Capital Markets Intermediaries"
-        ),
-        landing_url="https://www.mas.gov.sg/regulation/notices/notice-sfa-04-n02",
-        applies_to=("lfmc", "rfmc", "capital_markets_intermediary"),
-    ),
+    _spec("Notice 626", "notice-626", "Banks", "bank"),
+    _spec("Notice 626A", "notice-626a",
+          "Credit Card or Charge Card Licensees", "card_licensee"),
+    _spec("Notice 1014", "notice-1014", "Merchant Banks", "merchant_bank"),
+    _spec("Notice 824", "notice-824", "Finance Companies", "finance_company"),
+    _spec("Notice 314", "notice-314", "Life Insurers", "life_insurer"),
+    _spec("SFA04-N02", "notice-sfa-04-n02",
+          "Capital Markets Intermediaries",
+          "capital_markets_intermediary", "lfmc", "rfmc"),
+    _spec("SFA13-N01", "notice-sfa-13-n01", "Approved Trustees", "approved_trustee"),
+    _spec("FAA-N06", "notice-faa-n06", "Financial Advisers", "financial_adviser"),
+    _spec("TCA-N03", "notice-tca-n03", "Trust Companies", "trust_company"),
+    _spec("PSN01", "psn01-aml-cft-notice---specified-payment-services",
+          "Specified Payment Services", "payment_institution"),
+    _spec("PSN02", "psn02-aml-cft-notice---digital-payment-token-service",
+          "Digital Payment Token Services", "digital_payment_token_service"),
 )
 
 

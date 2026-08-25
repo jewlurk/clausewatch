@@ -76,7 +76,8 @@ details[open] summary::before{content:"\25BE  "}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.4rem}
 .pick{border:1px solid var(--line);background:var(--panel);padding:.5rem .65rem;cursor:pointer}
 .pick.on{border-color:var(--amber)}
-.pick .n{color:var(--amber);font-weight:700}
+.pick .n{color:var(--amber);font-weight:700;font-family:var(--mono);font-size:.9rem}
+.pick .who{color:var(--ink);font-size:.92rem;margin:.15rem 0}
 </style>
 
 <div class="wrap">
@@ -136,7 +137,7 @@ AML-POL-9, SFA04-N02, 8.1"></textarea>
 
     <div id="tab-watch" class="hide">
       <h2>Instruments to monitor</h2>
-      <p class="dim">Click to follow. You are alerted to changes at severity 2 and above.</p>
+      <p class="dim">Follow every notice your licences bring you under. Consultancies acting for several clients can follow all of them.</p>
       <div class="grid" id="watch"></div>
     </div>
 
@@ -354,11 +355,16 @@ async function loadMaps() {
 async function loadWatch() {
   const { data } = await sb.from("watchlists").select("id,instrument_id");
   const following = new Set((data || []).map((w) => w.instrument_id));
-  $("watch").innerHTML = instruments.map((i) => `
+  // The title carries who the notice binds, which is how a firm recognises its own.
+  $("watch").innerHTML = instruments.map((i) => {
+    const who = String(i.title || "").split(" - ").pop();
+    return `
     <div class="pick ${following.has(i.id) ? "on" : ""}" data-i="${i.id}">
       <div class="n">${esc(i.external_ref)}</div>
+      <div class="who">${esc(who)}</div>
       <div class="dim">${i.change_count} changes · ${following.has(i.id) ? "following" : "not followed"}</div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   $("watch").querySelectorAll(".pick").forEach((el) => {
     el.onclick = async () => {
