@@ -13,6 +13,10 @@ on:
         description: "Run the database connectivity check"
         type: boolean
         default: true
+      check_rls:
+        description: "Run the tenant isolation test (T22)"
+        type: boolean
+        default: false
       backfill_626:
         description: "Backfill all tracked instruments (T14)"
         type: boolean
@@ -55,6 +59,11 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/check_db.py
+      - name: Tenant isolation test (T22)
+        if: github.event_name == 'workflow_dispatch' && inputs.check_rls
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/test_rls_isolation.py
       - name: Apply migration
         if: github.event_name == 'workflow_dispatch' && inputs.migration != ''
         env:
