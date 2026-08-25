@@ -417,6 +417,10 @@ from the official documents, so you can see exactly what moved and when.</p>
 obligation and how recent they are. Renumbering and formatting rank below substance.</p>
 {recent_html}
 
+<h2 class="section">Console</h2>
+<p class="meta">Map your internal controls to clauses and get told when they change.
+Free through 31 March 2027. <a href="app.html">Open the console &rarr;</a></p>
+
 <h2 class="section">All instruments</h2>
 {chr(10).join(cards)}"""
     return page(
