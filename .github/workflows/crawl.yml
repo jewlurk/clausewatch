@@ -21,6 +21,10 @@ on:
         description: "Replay every console path against the live DB under RLS"
         type: boolean
         default: false
+      enrich_batch:
+        description: "Summarise this many un-summarised changes (blank = none)"
+        type: string
+        default: ""
       send_alerts_dry_run:
         description: "Render the T26 alert emails from live data without sending"
         type: boolean
@@ -77,6 +81,13 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/apply_migration.py "${{ inputs.migration }}"
+      - name: Summarise material changes
+        if: github.event_name == 'workflow_dispatch' && inputs.enrich_batch != ''
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ENRICH_BATCH: ${{ inputs.enrich_batch }}
+        run: python scripts/enrich.py
       - name: Alert email dry run (T26)
         if: github.event_name == 'workflow_dispatch' && inputs.send_alerts_dry_run
         env:
