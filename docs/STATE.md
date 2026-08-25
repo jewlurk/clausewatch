@@ -11,11 +11,44 @@ anything. Updated 25 August 2026.
 |---|---|
 | G1 — differ under 5% false positives | **Met.** 0% FP, 100% precision, 94.4% recall, measured against MAS's own tracked-changes PDF. Reproduce: `.venv/bin/python scripts/measure_g1.py` |
 | G2 — public demo asset | **Met.** https://jewlurk.github.io/clausewatch/ |
-| G3 — 20 firms contacted | **Founder task, not started.** The bottleneck. |
-| G4 — first design partner | Product is ready enough; needs G3 first. |
+| G3 — 20 firms contacted | **Deliberately deferred until the build is finished.** See sequencing below. |
+| G4 — first design partner | Follows G3. |
 
 **Live corpus:** 11 MAS AML/CFT notices, 127 documents, 64 versions, 1,918 clause
 changes. Pipeline runs daily at 01:17 UTC (~09:17 SGT) and redeploys itself.
+
+## Sequencing — founder decision, 25 August 2026
+
+**Finish the build first. Send outreach after.** Target: all building complete within
+two days of this date, then G3.
+
+The reasoning, in the founder's words: sending a link to a site with unverified
+features and unknown bugs is pointless — a compliance buyer who finds a defect on
+first contact is not a buyer you get a second try at. The project started ~23 August
+and the outer deadline is 1 April 2027, so there is time to do it in the right order.
+
+**Do not keep pressing for outreach before the build is done.** The trade-off was
+raised, considered, and decided. Treat G3 as scheduled, not as neglected.
+
+### Remaining build work, in order
+
+1. **Verification pass** — the founder's explicit concern is that site features have
+   not been confirmed working. Exercise every path end to end: sign-in, org bootstrap,
+   watchlist follow/unfollow, mapping add/remove, changes view, every public page, both
+   themes, mobile widths, and every link. Write down what was checked and what failed.
+2. **T26 email alerts** (Resend) — two templates: generic watchlist hit, and mapped-
+   control hit. The second is what renews contracts. Needs a Resend account and key.
+3. **Finish the summaries** — ~1,500 of 1,918 changes still lack one (batch capped at
+   400/run). Raise the cap or run repeatedly; roughly USD 1 to complete.
+4. **Measure parse quality on the 6 newest instruments.** The 0% false-positive figure
+   is Notice 626 only. Several other instruments have MAS tracked-changes PDFs from the
+   same 30 June 2025 round — use `scripts/mas_tracked_oracle.py` against them.
+5. **Investigate undated versions** dropped from timelines (see Known gaps).
+6. **Demote trivial changes** — punctuation and word-order edits still surface with the
+   same weight as substantive ones. Summaries now exist, so ranking can use them.
+7. Optional, in value order: Guidelines coverage (they change more often than the
+   notices), T16 SQL trigram matcher, T29 cost guardrails, T31 schema-drift detection,
+   T32 restore drill, T34 vendor security pack.
 
 ## Live URLs
 
