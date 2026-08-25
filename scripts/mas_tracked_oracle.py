@@ -25,6 +25,7 @@ from parse.sections import (
     parse_sections,
 )
 
+
 # MAS is not consistent about the colour. Notice 626's 2025 tracked copy uses pure red
 # (1, 0, 0); Notice 314's 2021 copy uses crimson (0.71, 0.03, 0.18) and a little blue.
 # Hard-coding pure red made 314 look like a document MAS had marked nothing in, which

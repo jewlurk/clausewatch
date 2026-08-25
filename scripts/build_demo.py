@@ -187,12 +187,16 @@ def summary_block(ai_summary: str | None, op: str) -> str:
     return f'    <p class="nosum">{fallback}</p>'
 
 
-def revision_headline(items) -> str:
-    """One line describing a revision as a whole, before the clause-by-clause detail."""
-    obligations = sum(1 for i in items if len(i) > 6 and i[6])
-    added = sum(1 for i in items if i[0] == "ADDED")
-    modified = sum(1 for i in items if i[0] == "MODIFIED")
-    removed = sum(1 for i in items if i[0] == "REMOVED")
+def revision_headline(rows) -> str:
+    """One line describing a revision as a whole, before the clause-by-clause detail.
+
+    The obligation count used to read the wrong column and so counted every clause
+    with a body, which is almost all of them. Same off-by-one as the summary line.
+    """
+    obligations = sum(1 for r in rows if col(r, "obligation_change"))
+    added = sum(1 for r in rows if col(r, "op") == "ADDED")
+    modified = sum(1 for r in rows if col(r, "op") == "MODIFIED")
+    removed = sum(1 for r in rows if col(r, "op") == "REMOVED")
     parts = []
     if added:
         parts.append(f"{added} new clause{'s' if added != 1 else ''}")
@@ -200,7 +204,7 @@ def revision_headline(items) -> str:
         parts.append(f"{modified} amended")
     if removed:
         parts.append(f"{removed} removed")
-    line = ", ".join(parts) or f"{len(items)} changes"
+    line = ", ".join(parts) or f"{len(rows)} changes"
     if obligations:
         line += (
             f" · {obligations} change{'s' if obligations != 1 else ''} affecting an obligation"
@@ -241,10 +245,11 @@ def importance(op: str, severity: int, revision: date | None, newest: date | Non
 
 def render_recent(rows, limit: int = 12) -> str:
     """The front-page feed: the changes that actually matter, newest and heaviest first."""
-    newest = max((r[4] for r in rows if r[4]), default=None)
+    newest = max((col(r, "to_date") for r in rows if col(r, "to_date")), default=None)
     ranked = sorted(
         rows,
-        key=lambda r: importance(r[6], r[9], r[4], newest),
+        key=lambda r: importance(col(r, "op"), col(r, "severity"),
+                                 col(r, "to_date"), newest),
         reverse=True,
     )
     # Cap per instrument. Ranking alone let SFA04-N02's 2025 restatement fill every
@@ -252,18 +257,21 @@ def render_recent(rows, limit: int = 12) -> str:
     per_instrument: dict[int, int] = {}
     selected = []
     for row in ranked:
-        count = per_instrument.get(row[0], 0)
+        count = per_instrument.get(col(row, "instrument_id"), 0)
         if count >= PER_INSTRUMENT_CAP:
             continue
-        per_instrument[row[0]] = count + 1
+        per_instrument[col(row, "instrument_id")] = count + 1
         selected.append(row)
         if len(selected) >= limit:
             break
 
     entries = []
     for row in selected:
-        (_iid, _fid, _tid, _fd, to_date, _eff, op, new_key, old_key, severity,
-         diff_text, _sim, ref, url, new_body, ai_summary, obligation) = row
+        op, ref, url = col(row, "op"), col(row, "external_ref"), col(row, "source_url")
+        new_key, old_key = col(row, "new_key"), col(row, "old_key")
+        severity, to_date = col(row, "severity"), col(row, "to_date")
+        diff_text, new_body = col(row, "diff_html"), col(row, "new_body")
+        ai_summary, obligation = col(row, "ai_summary"), col(row, "obligation_change")
         key = new_key or old_key or "\u2014"
         if diff_text:
             body = window(diff_text)
@@ -309,6 +317,38 @@ def page(title: str, description: str, body: str) -> str:
 """
 
 
+# The delta query's columns, named. They used to be positional, and
+# render_instrument sliced the wrong ones: `ns.body` landed in the slot
+# render code read as `ai_summary`, so every clause without a real summary was
+# published with its full text in the summary line — up to 1,764 words of MAS's
+# own wording on a public page, which §11 forbids outright. Indexing by name is
+# what stops that recurring.
+DELTA_COLUMNS = {
+    "instrument_id": "d.instrument_id",
+    "from_version_id": "d.from_version_id",
+    "to_version_id": "d.to_version_id",
+    "from_date": "fv.issue_date",
+    "to_date": "tv.issue_date",
+    "effective_date": "tv.effective_date",
+    "op": "d.op",
+    "new_key": "d.new_section_key",
+    "old_key": "d.old_section_key",
+    "severity": "d.severity",
+    "diff_html": "d.diff_html",
+    "similarity": "d.similarity",
+    "external_ref": "i.external_ref",
+    "source_url": "i.source_url",
+    "new_body": "ns.body",
+    "ai_summary": "d.ai_summary",
+    "obligation_change": "d.obligation_change",
+}
+COL = {name: index for index, name in enumerate(DELTA_COLUMNS)}
+
+
+def col(row, name):
+    return row[COL[name]]
+
+
 def fetch(conn):
     with conn.cursor() as cur:
         cur.execute(
@@ -321,13 +361,8 @@ def fetch(conn):
         instruments = cur.fetchall()
 
         cur.execute(
-            """
-            select d.instrument_id, d.from_version_id, d.to_version_id,
-                   fv.issue_date, tv.issue_date, tv.effective_date,
-                   d.op, d.new_section_key, d.old_section_key,
-                   d.severity, d.diff_html, d.similarity,
-                   i.external_ref, i.source_url, ns.body,
-                   d.ai_summary, d.obligation_change
+            f"""
+            select {", ".join(DELTA_COLUMNS.values())}
             from deltas d
             join instruments i on i.id = d.instrument_id
             left join sections ns on ns.id = d.new_section_id
@@ -360,8 +395,10 @@ def render_instrument(instrument, rows, counts):
 
     grouped: dict[tuple, list] = {}
     for row in rows:
-        grouped.setdefault((row[1], row[2], row[3], row[4], row[5]), []).append(
-            (*row[6:12], row[14], row[15]))
+        revision = tuple(col(row, name) for name in
+                         ("from_version_id", "to_version_id", "from_date",
+                          "to_date", "effective_date"))
+        grouped.setdefault(revision, []).append(row)
 
     sections_html = []
     for (_fid, to_id, from_date, to_date, effective), items in grouped.items():
@@ -370,8 +407,11 @@ def render_instrument(instrument, rows, counts):
         shown, hidden = items[:cap], max(0, len(items) - cap)
 
         entries = []
-        for (op, new_key, old_key, severity, diff_text, similarity,
-             ai_summary, _obligation) in shown:
+        for row in shown:
+            op, severity = col(row, "op"), col(row, "severity")
+            new_key, old_key = col(row, "new_key"), col(row, "old_key")
+            diff_text, similarity = col(row, "diff_html"), col(row, "similarity")
+            ai_summary = col(row, "ai_summary")
             key = new_key or old_key or "—"
             moved = (
                 f'<span class="moved">was {html.escape(old_key)}</span>'
@@ -496,7 +536,7 @@ def main() -> int:
 
     by_instrument: dict[int, list] = {}
     for row in deltas:
-        by_instrument.setdefault(row[0], []).append(row)
+        by_instrument.setdefault(col(row, "instrument_id"), []).append(row)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     cards: list[str] = []
