@@ -60,6 +60,7 @@ class PostgresVersionRepository:
         title: str,
         instrument_type: str,
         source_url: str,
+        applies_to: tuple[str, ...] = (),
     ) -> int:
         """Return the instrument id, creating it if absent.
 
@@ -69,14 +70,17 @@ class PostgresVersionRepository:
             cur.execute(
                 """
                 insert into instruments
-                    (regulator_id, external_ref, title, instrument_type, source_url)
-                values (%s, %s, %s, %s, %s)
+                    (regulator_id, external_ref, title, instrument_type, source_url,
+                     applies_to)
+                values (%s, %s, %s, %s, %s, %s)
                 on conflict (regulator_id, external_ref) do update
                     set title = excluded.title,
-                        source_url = excluded.source_url
+                        source_url = excluded.source_url,
+                        applies_to = excluded.applies_to
                 returning id
                 """,
-                (regulator_id, external_ref, title, instrument_type, source_url),
+                (regulator_id, external_ref, title, instrument_type, source_url,
+                 list(applies_to)),
             )
             return cur.fetchone()[0]
 

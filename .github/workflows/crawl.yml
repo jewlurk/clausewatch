@@ -20,7 +20,7 @@ on:
         type: boolean
         default: true
       backfill_626:
-        description: "Backfill Notice 626 history (T14)"
+        description: "Backfill all tracked instruments (T14)"
         type: boolean
         default: false
       build_corpus:
@@ -57,13 +57,13 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/check_db.py
-      - name: Backfill Notice 626 (T14)
+      - name: Backfill all tracked instruments (T14)
         if: github.event_name == 'workflow_dispatch' && inputs.backfill_626
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: python scripts/backfill_626.py
+        run: python scripts/backfill_all.py
       - name: Build corpus (sections + deltas)
         if: github.event_name == 'workflow_dispatch' && inputs.build_corpus
         env:
