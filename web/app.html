@@ -51,6 +51,11 @@ th{text-align:left;font-size:.64rem;letter-spacing:.12em;text-transform:uppercas
   color:var(--dim);border-bottom:1px solid var(--line);padding:.35rem .4rem}
 td{padding:.35rem .4rem;border-bottom:1px solid var(--line)}
 .hide{display:none}
+.sum{margin:0 0 .3rem;color:var(--ink);font-size:12.5px}
+.difftext{font-size:12px;line-height:1.55;color:var(--dim)}
+.gap{color:var(--dim);font-size:.85em}
+.ob{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#000;
+  background:var(--amber);padding:0 .3rem;font-weight:700}
 .card{border:1px solid var(--line);background:var(--panel);padding:.75rem 1rem;max-width:26rem}
 .note{border:1px solid var(--line);background:var(--panel);padding:.6rem .8rem;
   font-size:11px;color:var(--dim);margin:1rem 0}
@@ -156,6 +161,28 @@ const show = (el, on) => el.classList.toggle("hide", !on);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+const excerpt = (text, words) => {
+  const parts = String(text).split(/\s+/);
+  return parts.slice(0, words).join(" ") + (parts.length > words ? "\u2026" : "");
+};
+
+// Keep changed spans plus surrounding context; elide long unchanged runs. Splits on
+// whole <ins>/<del> segments so a tag is never broken — the input is already escaped
+// server-side and must stay well-formed.
+const CONTEXT = 18;
+function windowDiff(htmlText) {
+  const parts = String(htmlText).split(/(<(?:ins|del)>[\s\S]*?<\/(?:ins|del)>)/);
+  return parts.map((part, i) => {
+    if (i % 2) return part;
+    const w = part.split(/\s+/).filter(Boolean);
+    if (w.length <= CONTEXT * 2) return part;
+    const gap = ' <span class="gap">[…]</span> ';
+    if (i === 0) return gap + w.slice(-CONTEXT).join(" ");
+    if (i === parts.length - 1) return w.slice(0, CONTEXT).join(" ") + gap;
+    return w.slice(0, CONTEXT).join(" ") + gap + w.slice(-CONTEXT).join(" ");
+  }).join("");
+}
+
 let instruments = [];
 let orgId = null;
 
@@ -226,12 +253,25 @@ async function loadChanges() {
     const ref = c.internal_ref
       ? `<span class="tagm">${esc(c.internal_ref)}</span>` : "";
     const eff = c.effective_date ? ` · effective ${esc(c.effective_date)}` : "";
+    const ob = c.obligation_change ? `<span class="ob">obligation</span>` : "";
+    const summary = c.ai_summary ? `<p class="sum">${esc(c.ai_summary)}</p>` : "";
+
+    // An added clause has nothing to diff against, so show the new text instead of
+    // a placeholder. A modified clause shows the changed spans with context, not the
+    // whole clause — reading 40 unchanged lines to find three words is the problem
+    // this view exists to remove.
+    let body;
+    if (c.diff_html) body = windowDiff(c.diff_html);
+    else if (c.new_body) body = `<ins>${esc(excerpt(c.new_body, 45))}</ins>`;
+    else body = `<span class="dim">See the official text at MAS.</span>`;
+
     return `<article class="row ${sev}">
       <header>${ref}<span class="k">${esc(c.instrument_ref)} ${esc(c.section_key)}</span>
-        <span class="op">${esc(c.op)}</span>
+        <span class="op">${esc(c.op)}</span>${ob}
         <span class="dim">${esc(c.revision_date || "")}${eff}</span>
         <a href="${esc(c.source_url)}">MAS</a></header>
-      <div>${c.diff_html || '<span class="dim">See the official text at MAS.</span>'}</div>
+      ${summary}
+      <div class="difftext">${body}</div>
     </article>`;
   }).join("");
   track("alert_viewed", { count: data.length });
