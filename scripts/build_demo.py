@@ -36,89 +36,100 @@ OP_LABEL = {
 }
 
 STYLE = """
-/* Terminal aesthetic: dark, dense, monospace, amber. Information-first — a
-   compliance officer is scanning for a clause number, not admiring a layout.
-   Dark only; a terminal has no light mode. */
+/* Terminal palette, but prose is set in a readable face. Monospace is right for
+   clause numbers and diffs — identifiers you scan and compare character by character —
+   and wrong for sentences you actually read. */
 :root {
-  --bg:#000000; --panel:#0c0c0c; --line:#262626; --ink:#e8e8e8; --dim:#8a8a8a;
+  --bg:#000000; --panel:#0c0c0c; --line:#262626; --ink:#ececec; --dim:#9a9a9a;
   --amber:#ff9500; --amber-dim:#b36800; --amber-bg:#2b1a00;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font: 13px/1.5 var(--mono);
-  -webkit-font-smoothing: antialiased;
+  font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 62rem; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+.wrap { max-width: 76rem; margin: 0 auto; padding: 3rem 2.5rem 6rem; }
 a { color: var(--amber); }
 
-/* masthead */
-.brand { color: var(--amber); font-size: .72rem; letter-spacing: .22em;
-  text-transform: uppercase; margin: 0 0 .1rem; }
-h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; margin: 0 0 .35rem;
-  text-transform: uppercase; color: #fff; }
-.lede { color: var(--dim); margin: 0 0 1.25rem; max-width: 60ch; font-size: 12px; }
-.rule { border: 0; border-top: 1px solid var(--line); margin: 0 0 1rem; }
+.brand { color: var(--amber); font-family: var(--mono); font-size: .75rem;
+  letter-spacing: .22em; text-transform: uppercase; margin: 0 0 .4rem; }
+h1 { font-size: 1.9rem; font-weight: 650; letter-spacing: -.015em; line-height: 1.2;
+  margin: 0 0 .6rem; color: #fff; }
+.lede { color: var(--dim); margin: 0 0 2rem; max-width: 44rem; font-size: 1.02rem; }
 
-/* stat strip */
-.summary { border: 1px solid var(--line); background: var(--panel); margin-bottom: 1.5rem; }
-.summary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+.summary { border: 1px solid var(--line); background: var(--panel); margin-bottom: 2.5rem; }
+.summary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 0; margin: 0; }
-.summary div { padding: .6rem .85rem; border-right: 1px solid var(--line); }
+.summary div { padding: 1rem 1.4rem; border-right: 1px solid var(--line); }
 .summary div:last-child { border-right: 0; }
-.summary dt { font-size: .64rem; letter-spacing: .13em; text-transform: uppercase;
-  color: var(--dim); }
-.summary dd { margin: .2rem 0 0; font-size: 1.15rem; color: var(--amber);
-  font-variant-numeric: tabular-nums; }
-.checked { margin: 0; padding: .5rem .85rem; border-top: 1px solid var(--line);
-  font-size: 11px; color: var(--dim); }
+.summary dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim); }
+.summary dd { margin: .3rem 0 0; font-size: 1.7rem; color: var(--amber);
+  font-variant-numeric: tabular-nums; font-weight: 600; }
+.checked { margin: 0; padding: .8rem 1.4rem; border-top: 1px solid var(--line);
+  font-size: .88rem; color: var(--dim); }
 .checked strong { color: var(--ink); }
 
-/* section headers */
-.section { margin: 1.75rem 0 .2rem; font-size: .72rem; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--amber); font-weight: 700; }
-.meta { color: var(--dim); font-size: 11px; margin: 0 0 .7rem; }
+.section { margin: 3rem 0 .3rem; font-family: var(--mono); font-size: .75rem;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--amber); font-weight: 700; }
+.meta { color: var(--dim); font-size: .92rem; margin: 0 0 1.3rem; max-width: 44rem; }
 
-/* instrument cards */
 .card { display: block; border: 1px solid var(--line); background: var(--panel);
-  padding: .6rem .85rem; margin-bottom: -1px; text-decoration: none; color: inherit; }
-.card:hover { background: #16161c; border-color: var(--amber); position: relative; }
-.card h2 { margin: 0 0 .15rem; font-size: 13px; color: var(--amber);
-  letter-spacing: .04em; text-transform: uppercase; }
-.card .meta { margin: 0; }
-.tag { display: inline-block; font-size: .62rem; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--amber); border: 1px solid var(--line);
-  padding: 0 .3rem; margin-right: .25rem; }
+  padding: 1rem 1.4rem; margin-bottom: -1px; text-decoration: none; color: inherit; }
+.card:hover { background: #141414; border-color: var(--amber); position: relative; }
+.card h2 { margin: 0 0 .2rem; font-size: 1.05rem; color: var(--amber); font-weight: 650; }
+.card .meta { margin: 0; font-size: .88rem; }
+.tag { display: inline-block; font-family: var(--mono); font-size: .66rem;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+  border: 1px solid var(--line); padding: .05rem .4rem; margin-right: .3rem; }
 
-/* delta rows */
-.comparison { margin-bottom: 1.75rem; }
-h2 { font-size: 13px; margin: 0 0 .1rem; color: #fff; letter-spacing: .04em; }
-.delta { border: 1px solid var(--line); border-left: 2px solid var(--line);
-  background: var(--panel); padding: .5rem .75rem; margin-bottom: -1px; }
+.comparison { margin-bottom: 3.5rem; }
+h2 { font-size: 1.15rem; margin: 0 0 .2rem; color: #fff; font-weight: 650; }
+
+/* One change. The summary is the content; the wording is evidence you open. */
+.delta { border: 1px solid var(--line); border-left: 3px solid var(--line);
+  background: var(--panel); padding: 1rem 1.3rem; margin-bottom: -1px; }
 .delta.high { border-left-color: var(--amber); }
 .delta.med { border-left-color: var(--amber-dim); }
-.delta header { display: flex; gap: .5rem; align-items: baseline;
-  flex-wrap: wrap; margin-bottom: .3rem; }
-.clause { font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
-.op { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--dim); border: 1px solid var(--line); padding: 0 .3rem; }
-.moved, .sim { font-size: 11px; color: var(--dim); }
-.sum { margin: 0 0 .35rem; color: var(--ink); font-size: 12.5px; }
-.ob { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
-  color: #000; background: var(--amber); padding: 0 .3rem; font-weight: 700; }
-.src { color: var(--amber); text-decoration: none; font-weight: 700; }
-.text { font-size: 12px; line-height: 1.55; }
-ins { background: var(--amber-bg); color: var(--amber); text-decoration: none; }
-del { background: transparent; color: var(--dim); text-decoration: line-through; }
-.muted, .gap { color: var(--dim); }
-.more { font-size: 11px; color: var(--dim); margin: .5rem 0 0; }
-.back { display: inline-block; margin-bottom: .8rem; font-size: 11px;
-  color: var(--dim); text-decoration: none; }
+.delta header { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap;
+  margin-bottom: .45rem; }
+.clause { font-family: var(--mono); font-weight: 700; color: var(--amber);
+  font-size: .95rem; }
+.op { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--dim); border: 1px solid var(--line);
+  padding: .05rem .4rem; }
+.ob { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em;
+  text-transform: uppercase; color: #000; background: var(--amber);
+  padding: .05rem .4rem; font-weight: 700; }
+.moved, .sim { font-size: .85rem; color: var(--dim); font-family: var(--mono); }
+.sum { margin: 0 0 .5rem; color: var(--ink); font-size: 1rem; line-height: 1.6;
+  max-width: 62rem; }
+.nosum { margin: 0 0 .5rem; color: var(--dim); font-size: .95rem; font-style: italic; }
 
-footer { border-top: 1px solid var(--line); margin-top: 2.5rem; padding-top: .9rem;
-  color: var(--dim); font-size: 11px; }
+details { margin-top: .4rem; }
+summary { cursor: pointer; font-family: var(--mono); font-size: .72rem;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+  list-style: none; padding: .15rem 0; }
+summary::-webkit-details-marker { display: none; }
+summary:hover { color: var(--amber); }
+summary::before { content: "▸ "; }
+details[open] summary::before { content: "▾ "; }
+.text { font-family: var(--mono); font-size: .84rem; line-height: 1.7;
+  color: var(--dim); margin-top: .5rem; padding: .8rem 1rem; background: #080808;
+  border: 1px solid var(--line); overflow-x: auto; }
+ins { background: var(--amber-bg); color: var(--amber); text-decoration: none; }
+del { background: transparent; color: #6e6e6e; text-decoration: line-through; }
+.muted, .gap { color: var(--dim); }
+.more { font-size: .9rem; color: var(--dim); margin: .8rem 0 0; }
+.back { display: inline-block; margin-bottom: 1.2rem; font-size: .9rem;
+  color: var(--dim); text-decoration: none; font-family: var(--mono); }
+
+footer { border-top: 1px solid var(--line); margin-top: 4rem; padding-top: 1.4rem;
+  color: var(--dim); font-size: .88rem; max-width: 52rem; }
 footer strong { color: var(--ink); }
+@media (max-width: 700px) { .wrap { padding: 2rem 1.1rem 4rem; } }
 """
 
 FOOTER = """<footer>
@@ -159,6 +170,42 @@ def window(diff_html_text: str) -> str:
         else:
             out.append(head + ellipsis + tail)
     return "".join(out)
+
+
+def summary_block(ai_summary: str | None, op: str) -> str:
+    """What the change means, in a sentence.
+
+    When no summary exists the absence is stated rather than papered over — a reader
+    should never wonder whether a blank line means "nothing happened".
+    """
+    if ai_summary:
+        return f'    <p class="sum">{html.escape(ai_summary)}</p>'
+    fallback = {
+        "RENUMBERED": "Clause number changed; wording unchanged.",
+        "REMOVED": "Clause removed from the instrument.",
+    }.get(op, "No summary generated for this change — see the wording below.")
+    return f'    <p class="nosum">{fallback}</p>'
+
+
+def revision_headline(items) -> str:
+    """One line describing a revision as a whole, before the clause-by-clause detail."""
+    obligations = sum(1 for i in items if len(i) > 6 and i[6])
+    added = sum(1 for i in items if i[0] == "ADDED")
+    modified = sum(1 for i in items if i[0] == "MODIFIED")
+    removed = sum(1 for i in items if i[0] == "REMOVED")
+    parts = []
+    if added:
+        parts.append(f"{added} new clause{'s' if added != 1 else ''}")
+    if modified:
+        parts.append(f"{modified} amended")
+    if removed:
+        parts.append(f"{removed} removed")
+    line = ", ".join(parts) or f"{len(items)} changes"
+    if obligations:
+        line += (
+            f" · {obligations} change{'s' if obligations != 1 else ''} affecting an obligation"
+        )
+    return line
 
 
 def sev_class(severity: int) -> str:
@@ -229,9 +276,6 @@ def render_recent(rows, limit: int = 12) -> str:
                 else '<span class="muted">Clause removed.</span>'
             )
         when = f"{to_date:%b %Y}" if to_date else ""
-        summary = (
-            f'<p class="sum">{html.escape(ai_summary)}</p>' if ai_summary else ""
-        )
         flag = '<span class="ob">obligation</span>' if obligation else ""
         entries.append(
             f"""  <article class="delta {sev_class(severity)}">
@@ -239,8 +283,9 @@ def render_recent(rows, limit: int = 12) -> str:
       <span class="clause">{html.escape(key)}</span>
       <span class="op">{OP_LABEL.get(op, op)}</span>{flag}
       <span class="sim">{when}</span></header>
-{summary}
-    <div class="text">{body}</div>
+{summary_block(ai_summary, op)}
+    <details><summary>Exact wording</summary>
+      <div class="text">{body}</div></details>
   </article>"""
         )
     return chr(10).join(entries)
@@ -316,7 +361,7 @@ def render_instrument(instrument, rows, counts):
     grouped: dict[tuple, list] = {}
     for row in rows:
         grouped.setdefault((row[1], row[2], row[3], row[4], row[5]), []).append(
-            (*row[6:12], row[14]))
+            (*row[6:12], row[14], row[15]))
 
     sections_html = []
     for (_fid, to_id, from_date, to_date, effective), items in grouped.items():
@@ -325,7 +370,8 @@ def render_instrument(instrument, rows, counts):
         shown, hidden = items[:cap], max(0, len(items) - cap)
 
         entries = []
-        for op, new_key, old_key, severity, diff_text, similarity, ai_summary in shown:
+        for (op, new_key, old_key, severity, diff_text, similarity,
+             ai_summary, _obligation) in shown:
             key = new_key or old_key or "—"
             moved = (
                 f'<span class="moved">was {html.escape(old_key)}</span>'
@@ -344,15 +390,13 @@ def render_instrument(instrument, rows, counts):
                 if similarity is not None
                 else ""
             )
-            summary = (
-                f'<p class="sum">{html.escape(ai_summary)}</p>' if ai_summary else ""
-            )
             entries.append(
                 f"""    <article class="delta {sev_class(severity)}">
       <header><span class="clause">{html.escape(key)}</span>
         <span class="op">{OP_LABEL.get(op, op)}</span>{moved}{sim}</header>
-{summary}
-      <div class="text">{body}</div>
+{summary_block(ai_summary, op)}
+      <details><summary>Exact wording</summary>
+        <div class="text">{body}</div></details>
     </article>"""
             )
 
@@ -367,8 +411,7 @@ def render_instrument(instrument, rows, counts):
         sections_html.append(
             f"""  <section class="comparison">
     <h2>{to_date:%d %B %Y}</h2>
-    <p class="meta">{len(items)} clause{"s" if len(items) != 1 else ""} changed since
-      {from_date:%d %B %Y}{eff}</p>
+    <p class="meta">{revision_headline(items)} · since {from_date:%d %B %Y}{eff}</p>
 {chr(10).join(entries)}
 {more}
   </section>"""
@@ -431,7 +474,9 @@ obligation and how recent they are. Renumbering and formatting rank below substa
 
 <h2 class="section">Console</h2>
 <p class="meta">Map your internal controls to clauses and get told when they change.
-Free through 31 March 2027. <a href="app.html">Open the console &rarr;</a></p>
+Free through 31 March 2027.
+<a href="app.html">Open the console &rarr;</a> &nbsp;·&nbsp;
+<a href="guide.html">How it works &rarr;</a></p>
 
 <h2 class="section">All instruments</h2>
 {chr(10).join(cards)}"""

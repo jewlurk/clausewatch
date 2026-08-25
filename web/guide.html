@@ -1,0 +1,172 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use Clausewatch</title>
+<style>
+:root{--bg:#000;--panel:#0c0c0c;--line:#262626;--ink:#ececec;--dim:#9a9a9a;
+  --amber:#ff9500;--amber-bg:#2b1a00;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 var(--sans);
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:52rem;margin:0 auto;padding:3rem 2.5rem 6rem}
+@media(max-width:700px){.wrap{padding:2rem 1.1rem 4rem}}
+a{color:var(--amber)}
+.brand{color:var(--amber);font-family:var(--mono);font-size:.75rem;letter-spacing:.22em;
+  text-transform:uppercase;margin:0 0 .4rem}
+h1{font-size:1.9rem;font-weight:650;letter-spacing:-.015em;margin:.15rem 0 .6rem;color:#fff}
+h2{font-size:1.15rem;font-weight:650;margin:2.5rem 0 .5rem;color:#fff}
+h3{font-size:1rem;font-weight:600;margin:1.5rem 0 .3rem;color:var(--amber)}
+.lede{color:var(--dim);font-size:1.02rem;margin:0 0 2rem}
+p{margin:0 0 .9rem;max-width:44rem}
+ol,ul{max-width:44rem;padding-left:1.3rem}
+li{margin-bottom:.5rem}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);
+  border:1px solid var(--line);padding:.05rem .3rem}
+.step{border:1px solid var(--line);background:var(--panel);padding:1.1rem 1.4rem;
+  margin-bottom:-1px}
+.step h3{margin-top:0}
+.note{border:1px solid var(--line);border-left:3px solid var(--amber);
+  background:var(--panel);padding:.9rem 1.2rem;margin:1.5rem 0;font-size:.94rem;
+  color:var(--dim)}
+.note strong{color:var(--ink)}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.94rem}
+th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line);
+  padding:.4rem .5rem}
+td{padding:.5rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--line);padding:.05rem .4rem;color:var(--dim)}
+.ob{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--amber);color:#000;padding:.05rem .4rem;font-weight:700}
+footer{border-top:1px solid var(--line);margin-top:4rem;padding-top:1.4rem;
+  color:var(--dim);font-size:.88rem}
+footer strong{color:var(--ink)}
+</style>
+
+<div class="wrap">
+<p class="brand">Clausewatch</p>
+<h1>How to use Clausewatch</h1>
+<p class="lede">Five minutes to set up. After that it runs without you until something
+changes.</p>
+
+<h2>What problem this solves</h2>
+<p>When MAS amends a notice it republishes the whole PDF with a new date. It does not
+publish a redline. So finding out what actually changed means putting two long PDFs
+side by side, and working out which of your internal policies are now out of date means
+going through your control register by hand.</p>
+<p>Clausewatch does the first part automatically and keeps a record of the second, so a
+change to a clause you depend on reaches you instead of waiting to be found.</p>
+
+<h2>Setting up</h2>
+
+<div class="step">
+<h3>1. Sign in</h3>
+<p>Enter your work email on the <a href="app.html">console</a>. You get a link that
+signs you straight in — there is no password to choose, forget, or rotate. An
+organisation is created for you on first sign-in.</p>
+</div>
+
+<div class="step">
+<h3>2. Follow the instruments that apply to you</h3>
+<p>On the <strong>Watchlist</strong> tab, click the instruments your licence brings you
+under. Most firms need one or two:</p>
+<table>
+<tr><th>If you are</th><th>Follow</th></tr>
+<tr><td>A bank</td><td>Notice 626</td></tr>
+<tr><td>A merchant bank</td><td>Notice 626A</td></tr>
+<tr><td>A major payment institution</td><td>PSN01</td></tr>
+<tr><td>A digital payment token service</td><td>PSN02</td></tr>
+<tr><td>A fund manager, LFMC/RFMC, or other capital markets intermediary</td>
+    <td>SFA04-N02</td></tr>
+</table>
+<p>Consultancies acting for several clients can follow all of them.</p>
+</div>
+
+<div class="step">
+<h3>3. Map your controls — this is the part that pays off</h3>
+<p>On the <strong>Control mappings</strong> tab, paste your control register. One per
+line, three fields:</p>
+<p><code>INTERNAL REF, INSTRUMENT, CLAUSE</code></p>
+<p>For example:</p>
+<p><code>AML-POL-4.2, Notice 626, 6.14</code><br>
+<code>SOP-Onboarding-11, PSN01, 6.7</code><br>
+<code>AML-POL-9, SFA04-N02, 8.1</code></p>
+<p>Paste the whole register at once — it is built for a few hundred lines, not one at a
+time. Anything Clausewatch cannot match is reported back rather than silently dropped.</p>
+<div class="note">
+<strong>Why bother.</strong> A watchlist tells you an instrument changed. A mapping tells
+you <em>which of your documents is now wrong</em> — that clause 6.14 changed and your
+<code>AML-POL-4.2</code> is the policy that cites it. That is the difference between a
+news alert and a task.
+</div>
+</div>
+
+<h2>Reading a change</h2>
+<p>Every change shows the same four things:</p>
+<table>
+<tr><th>What you see</th><th>What it means</th></tr>
+<tr><td><span class="tag">Added</span></td><td>A clause that did not exist before</td></tr>
+<tr><td><span class="tag">Modified</span></td><td>Wording changed within an existing clause</td></tr>
+<tr><td><span class="tag">Removed</span></td><td>The clause is gone</td></tr>
+<tr><td><span class="tag">Renumbered</span></td>
+    <td>Only the number moved; wording is identical. Usually safe to ignore, but worth
+        checking if your policy cites the number</td></tr>
+<tr><td><span class="ob">Obligation</span></td>
+    <td>The change alters what someone is required to do — these are the ones to read
+        first</td></tr>
+</table>
+<p>Each change leads with a plain-English sentence describing what changed. Under it,
+<strong>Exact wording</strong> opens the word-level comparison: added text is
+highlighted, removed text is struck through, and long unchanged stretches are collapsed
+so you see the change rather than the whole clause.</p>
+<p>Every change links to the official MAS page. Check anything material there before you
+act on it.</p>
+
+<h2>What to do when something changes</h2>
+<ol>
+<li>Read the summary. If it is not marked <span class="ob">Obligation</span>, it is
+    usually a definition, a cross-reference, or a clarification.</li>
+<li>Open <strong>Exact wording</strong> to see precisely what moved.</li>
+<li>Check the effective date — MAS often gives months of notice, and sometimes staggers
+    commencement across clauses.</li>
+<li>Open the linked MAS page to confirm against the official text.</li>
+<li>Pull up the internal document named in the mapping and decide whether it needs
+    updating.</li>
+</ol>
+
+<h2>What it does not do</h2>
+<p>Being straight about the limits, because the gaps matter more than the features:</p>
+<ul>
+<li><strong>It is not legal advice.</strong> Clausewatch describes what changed. It does
+    not tell you what to do about it, and it is not a substitute for professional
+    advice.</li>
+<li><strong>It is not real time.</strong> MAS is checked daily, so a change reaches you
+    within a day of publication — not within minutes.</li>
+<li><strong>It can miss things.</strong> Changes confined to footnotes may not be
+    reported, and changes invisible to text extraction — formatting, or text inside an
+    image — will not be. Never treat silence as proof that nothing changed.</li>
+<li><strong>MAS is the source of truth.</strong> Where anything here differs from the
+    official publication, the official publication is correct.</li>
+</ul>
+
+<h2>What it costs</h2>
+<p>Free through <strong>31 March 2027</strong>. From 1 April 2027, SGD 499/month per
+licensed entity, or SGD 1,200/month for a consultancy licence covering multiple client
+entities. Cancel anytime, and you will get at least 30 days' notice before any charge.</p>
+
+<h2>What we hold about you</h2>
+<p>Your email address, your organisation name, and the control references you enter. We
+do not want and do not store your internal policies, your customers' records, or any
+personal data belonging to your clients — so the honest answer on a vendor security
+questionnaire is that we hold none of it. Your data is never sent to any AI service;
+only public MAS text is processed that way.</p>
+
+<footer>
+<p><strong>Not legal advice.</strong> Clausewatch reports what text changed. It does not
+interpret legal effect or advise on obligations, and it is not affiliated with or
+endorsed by the Monetary Authority of Singapore.</p>
+<p><a href="index.html">Changelogs</a> · <a href="app.html">Console</a></p>
+</footer>
+</div>

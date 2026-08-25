@@ -4,23 +4,25 @@
 <title>Clausewatch — console</title>
 <style>
 :root {
-  --bg:#000000; --panel:#0c0c0c; --line:#262626; --ink:#e8e8e8; --dim:#8a8a8a;
+  --bg:#000000; --panel:#0c0c0c; --line:#262626; --ink:#ececec; --dim:#9a9a9a;
   --amber:#ff9500; --amber-dim:#b36800; --amber-bg:#2b1a00;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 var(--mono);
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);
   -webkit-font-smoothing:antialiased}
 a{color:var(--amber)}
-.wrap{max-width:62rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
-.brand{color:var(--amber);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;margin:0}
-h1{font-size:1.05rem;text-transform:uppercase;letter-spacing:.02em;color:#fff;margin:.1rem 0 1rem}
-h2{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);
-  margin:1.6rem 0 .5rem;font-weight:700}
+.wrap{max-width:76rem;margin:0 auto;padding:2.5rem 2.5rem 5rem}
+@media(max-width:700px){.wrap{padding:1.5rem 1.1rem 3rem}}
+.brand{color:var(--amber);font-family:var(--mono);font-size:.75rem;letter-spacing:.22em;text-transform:uppercase;margin:0}
+h1{font-size:1.9rem;font-weight:650;letter-spacing:-.015em;color:#fff;margin:.15rem 0 1.2rem}
+h2{font-family:var(--mono);font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--amber);margin:2rem 0 .6rem;font-weight:700}
 .dim{color:var(--dim)}
 .err{color:var(--dim);margin:.5rem 0}
 .ok{color:var(--amber);margin:.5rem 0}
-input,select,textarea,button{font:13px var(--mono);background:#08080a;color:var(--ink);
+input,select,textarea,button{font:14px var(--mono);background:#08080a;color:var(--ink);
   border:1px solid var(--line);padding:.4rem .5rem}
 input,textarea,select{width:100%}
 textarea{min-height:7rem;resize:vertical}
@@ -30,16 +32,17 @@ button.ghost{background:transparent;color:var(--amber);border:1px solid var(--li
 button:disabled{opacity:.5;cursor:default}
 label{display:block;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
   color:var(--dim);margin:.7rem 0 .2rem}
-nav{display:flex;gap:.4rem;border-bottom:1px solid var(--line);margin-bottom:1rem;
+nav{display:flex;gap:.5rem;border-bottom:1px solid var(--line);margin-bottom:1.5rem;
   flex-wrap:wrap}
 nav button{background:transparent;color:var(--dim);border:0;border-bottom:2px solid transparent;
-  padding:.4rem .6rem;font-weight:400}
+  padding:.5rem .8rem;font-weight:400;font-family:var(--mono);font-size:.78rem;
+  letter-spacing:.08em;text-transform:uppercase}
 nav button.on{color:var(--amber);border-bottom-color:var(--amber);font-weight:700}
-.row{border:1px solid var(--line);border-left:2px solid var(--line);background:var(--panel);
-  padding:.5rem .75rem;margin-bottom:-1px}
+.row{border:1px solid var(--line);border-left:3px solid var(--line);background:var(--panel);
+  padding:1rem 1.3rem;margin-bottom:-1px}
 .row.high{border-left-color:var(--amber)} .row.med{border-left-color:var(--amber-dim)}
-.row header{display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.25rem}
-.k{color:var(--amber);font-weight:700}
+.row header{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-bottom:.45rem}
+.k{color:var(--amber);font-weight:700;font-family:var(--mono);font-size:.95rem}
 .tagm{color:var(--amber);border:1px solid var(--line);padding:0 .3rem;font-size:.62rem;
   letter-spacing:.1em;text-transform:uppercase}
 .op{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);
@@ -51,14 +54,24 @@ th{text-align:left;font-size:.64rem;letter-spacing:.12em;text-transform:uppercas
   color:var(--dim);border-bottom:1px solid var(--line);padding:.35rem .4rem}
 td{padding:.35rem .4rem;border-bottom:1px solid var(--line)}
 .hide{display:none}
-.sum{margin:0 0 .3rem;color:var(--ink);font-size:12.5px}
-.difftext{font-size:12px;line-height:1.55;color:var(--dim)}
+.sum{margin:0 0 .5rem;color:var(--ink);font-size:1rem;line-height:1.6;max-width:62rem}
+.nosum{margin:0 0 .5rem;color:var(--dim);font-size:.95rem;font-style:italic}
+details{margin-top:.4rem}
+summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);list-style:none;padding:.15rem 0}
+summary::-webkit-details-marker{display:none}
+summary:hover{color:var(--amber)}
+summary::before{content:"\25B8  "}
+details[open] summary::before{content:"\25BE  "}
+.difftext{font-family:var(--mono);font-size:.84rem;line-height:1.7;color:var(--dim);
+  margin-top:.5rem;padding:.8rem 1rem;background:#080808;border:1px solid var(--line);
+  overflow-x:auto}
 .gap{color:var(--dim);font-size:.85em}
 .ob{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#000;
   background:var(--amber);padding:0 .3rem;font-weight:700}
-.card{border:1px solid var(--line);background:var(--panel);padding:.75rem 1rem;max-width:26rem}
-.note{border:1px solid var(--line);background:var(--panel);padding:.6rem .8rem;
-  font-size:11px;color:var(--dim);margin:1rem 0}
+.card{border:1px solid var(--line);background:var(--panel);padding:1.2rem 1.4rem;max-width:30rem}
+.note{border:1px solid var(--line);background:var(--panel);padding:.9rem 1.2rem;
+  font-size:.9rem;color:var(--dim);margin:1.5rem 0;max-width:52rem;line-height:1.6}
 .note strong{color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.4rem}
 .pick{border:1px solid var(--line);background:var(--panel);padding:.5rem .65rem;cursor:pointer}
@@ -77,6 +90,7 @@ td{padding:.35rem .4rem;border-bottom:1px solid var(--line)}
       <label for="email">Work email</label>
       <input id="email" type="email" autocomplete="email" placeholder="you@firm.com.sg">
       <p><button id="send">Send sign-in link</button></p>
+      <p class="dim" style="font-size:.9rem"><a href="guide.html">How it works &rarr;</a></p>
       <p id="authmsg" class="dim"></p>
     </div>
     <div class="note">
@@ -91,6 +105,7 @@ td{padding:.35rem .4rem;border-bottom:1px solid var(--line)}
   <section id="app" class="hide">
     <h1>Console</h1>
     <p class="dim" id="who"></p>
+    <p class="dim" style="font-size:.9rem"><a href="guide.html">How to use Clausewatch &rarr;</a></p>
     <nav>
       <button data-tab="changes" class="on">Changes</button>
       <button data-tab="controls">Control mappings</button>
@@ -254,7 +269,6 @@ async function loadChanges() {
       ? `<span class="tagm">${esc(c.internal_ref)}</span>` : "";
     const eff = c.effective_date ? ` · effective ${esc(c.effective_date)}` : "";
     const ob = c.obligation_change ? `<span class="ob">obligation</span>` : "";
-    const summary = c.ai_summary ? `<p class="sum">${esc(c.ai_summary)}</p>` : "";
 
     // An added clause has nothing to diff against, so show the new text instead of
     // a placeholder. A modified clause shows the changed spans with context, not the
@@ -262,16 +276,25 @@ async function loadChanges() {
     // this view exists to remove.
     let body;
     if (c.diff_html) body = windowDiff(c.diff_html);
-    else if (c.new_body) body = `<ins>${esc(excerpt(c.new_body, 45))}</ins>`;
+    else if (c.new_body) body = `<ins>${esc(excerpt(c.new_body, 60))}</ins>`;
     else body = `<span class="dim">See the official text at MAS.</span>`;
+
+    // Absence of a summary is stated, never left blank — a reader should not have to
+    // wonder whether an empty line means nothing happened.
+    const lead = c.ai_summary
+      ? `<p class="sum">${esc(c.ai_summary)}</p>`
+      : `<p class="nosum">${c.op === "RENUMBERED"
+          ? "Clause number changed; wording unchanged."
+          : "No summary for this change — see the wording below."}</p>`;
 
     return `<article class="row ${sev}">
       <header>${ref}<span class="k">${esc(c.instrument_ref)} ${esc(c.section_key)}</span>
         <span class="op">${esc(c.op)}</span>${ob}
         <span class="dim">${esc(c.revision_date || "")}${eff}</span>
         <a href="${esc(c.source_url)}">MAS</a></header>
-      ${summary}
-      <div class="difftext">${body}</div>
+      ${lead}
+      <details><summary>Exact wording</summary>
+        <div class="difftext">${body}</div></details>
     </article>`;
   }).join("");
   track("alert_viewed", { count: data.length });
