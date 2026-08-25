@@ -270,7 +270,7 @@ def render_instrument(instrument, rows, counts):
 
     grouped: dict[tuple, list] = {}
     for row in rows:
-        grouped.setdefault((row[1], row[2], row[3], row[4], row[5]), []).append(row[6:])
+        grouped.setdefault((row[1], row[2], row[3], row[4], row[5]), []).append(row[6:12])
 
     sections_html = []
     for (_fid, to_id, from_date, to_date, effective), items in grouped.items():
