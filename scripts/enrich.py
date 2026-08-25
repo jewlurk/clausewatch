@@ -7,6 +7,7 @@ still a usable product.
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -16,7 +17,10 @@ from enrich.summarise import EnrichmentBudget, build_client, summarise_change
 
 from db import PostgresVersionRepository, connection
 
-BATCH = 400
+# Default keeps a daily run short and its cost predictable. Raise it via the
+# environment to clear a backlog — the token ceiling in EnrichmentBudget is what
+# actually bounds spend, not this.
+BATCH = int(os.environ.get("ENRICH_BATCH", "400"))
 
 
 def main() -> int:

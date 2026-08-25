@@ -67,6 +67,16 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/build_demo.py
 
+      # Alerts go out after the site is built, so a link in an email always resolves.
+      # No Resend key configured is not a failure: the script says what it would have
+      # sent and exits 0, exactly as enrichment does without an LLM key.
+      - name: Send alert emails (T26)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ vars.ALERT_FROM }}
+        run: python scripts/send_alerts.py
+
       - uses: actions/upload-artifact@v4
         with:
           name: site

@@ -34,3 +34,5 @@ dist/
 /web/notice-*.html
 /web/psn*.html
 /web/sfa*.html
+.claude/launch.json
+.cache/

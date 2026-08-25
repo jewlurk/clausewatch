@@ -1,8 +1,8 @@
 """Ground truth from MAS's own tracked-changes PDF.
 
 MAS states: coloured + struck-through = deletion, coloured + underlined = insertion.
-So a clause containing red characters is a clause MAS changed. The document is
-extracted twice — once with every character, once with red characters omitted — and
+So a clause containing coloured characters is a clause MAS changed. The document is
+extracted twice — once with every character, once with the coloured characters omitted — and
 compared per section. Sections that differ are the ones MAS marked.
 
 This mirrors parse_pdf's font split so footnotes are covered too: footnotes carry real
@@ -25,16 +25,21 @@ from parse.sections import (
     parse_sections,
 )
 
-RED = (1.0, 0.0, 0.0)
-
-
-def _is_red(ch: LTChar) -> bool:
+# MAS is not consistent about the colour. Notice 626's 2025 tracked copy uses pure red
+# (1, 0, 0); Notice 314's 2021 copy uses crimson (0.71, 0.03, 0.18) and a little blue.
+# Hard-coding pure red made 314 look like a document MAS had marked nothing in, which
+# scores as 0% recall rather than as the bug it is. So the test is "chromatic": black,
+# white and greys have equal components, and every markup colour seen so far does not.
+def _is_markup(ch: LTChar) -> bool:
     colour = getattr(ch.graphicstate, "ncolor", None)
-    return isinstance(colour, tuple) and tuple(round(c, 2) for c in colour) == RED
+    if not isinstance(colour, tuple) or len(colour) != 3:
+        return False
+    r, g, b = (round(c, 2) for c in colour)
+    return max(r, g, b) - min(r, g, b) > 0.1
 
 
-def split_tracked(path, skip_red: bool = False) -> tuple[str, str]:
-    """Return (body text, footnote text), optionally omitting MAS's red markup."""
+def split_tracked(path, skip_markup: bool = False) -> tuple[str, str]:
+    """Return (body text, footnote text), optionally omitting MAS's change markup."""
     pages = list(extract_pages(str(path), laparams=LAParams(boxes_flow=None)))
 
     sizes: dict[float, int] = {}
@@ -66,7 +71,7 @@ def split_tracked(path, skip_red: bool = False) -> tuple[str, str]:
                 for ch in line:
                     if not isinstance(ch, LTChar):
                         continue
-                    if skip_red and _is_red(ch):
+                    if skip_markup and _is_markup(ch):
                         continue
                     (big if ch.size >= floor else small).append(ch.get_text())
                 if "".join(big).strip():
@@ -76,8 +81,8 @@ def split_tracked(path, skip_red: bool = False) -> tuple[str, str]:
     return "\n".join(body), "\n".join(footnotes)
 
 
-def _sections(path, skip_red: bool) -> dict[str, str]:
-    body_text, footnote_text = split_tracked(path, skip_red=skip_red)
+def _sections(path, skip_markup: bool) -> dict[str, str]:
+    body_text, footnote_text = split_tracked(path, skip_markup=skip_markup)
     out = {s.section_key: s.body for s in parse_sections(body_text)}
     out.update({s.section_key: s.body for s in parse_footnotes(footnote_text)})
     return out
@@ -85,8 +90,8 @@ def _sections(path, skip_red: bool) -> dict[str, str]:
 
 def changed_clauses(path) -> tuple[set[str], set[str]]:
     """(sections MAS marked as changed, all sections in the tracked document)."""
-    full = _sections(path, skip_red=False)
-    black = _sections(path, skip_red=True)
+    full = _sections(path, skip_markup=False)
+    black = _sections(path, skip_markup=True)
     changed = {key for key, body in full.items() if black.get(key) != body}
     return changed, set(full)
 
