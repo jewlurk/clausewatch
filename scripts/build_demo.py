@@ -93,6 +93,10 @@ del { background: var(--del-bg); color: var(--del); padding: .05em .12em;
 .muted { color: var(--muted); }
 .gap { color: var(--muted); font-size: .85em; }
 .more { font-size: .9rem; font-style: italic; }
+.checked { margin: 1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--line);
+  font-size: .88rem; color: var(--muted); }
+.section { margin: 2.75rem 0 .3rem; font-size: 1.05rem; letter-spacing: .01em; }
+.src { font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--line); }
 .back { display: inline-block; margin-bottom: 1.4rem; font-size: .9rem;
   color: var(--muted); }
 footer { border-top: 1px solid var(--line); margin-top: 4rem; padding-top: 1.4rem;
@@ -150,6 +154,55 @@ def sev_class(severity: int) -> str:
     return "high" if severity >= 4 else "med" if severity == 3 else "low"
 
 
+# What makes a change worth a compliance officer's attention, in order of weight.
+# A renumbering is real but carries no new obligation, so it must never outrank a
+# threshold change. Severity already encodes added modals, changed numbers and dates
+# (see diff/severity.py); this adds the operation and recency dimensions.
+OP_WEIGHT = {"ADDED": 3, "MODIFIED": 3, "REMOVED": 2, "RENUMBERED": 0}
+
+
+def importance(op: str, severity: int, revision: date | None, newest: date | None) -> float:
+    """Rank a change for the front page. Higher is more worth reading."""
+    score = severity * 2 + OP_WEIGHT.get(op, 1)
+    if revision and newest:
+        # Decay by revision age so the current amendment leads, without burying an
+        # older high-severity change entirely.
+        years = max(0.0, (newest - revision).days / 365.0)
+        score -= min(years * 1.2, 6.0)
+    return score
+
+
+def render_recent(rows, limit: int = 12) -> str:
+    """The front-page feed: the changes that actually matter, newest and heaviest first."""
+    newest = max((r[4] for r in rows if r[4]), default=None)
+    ranked = sorted(
+        rows,
+        key=lambda r: importance(r[6], r[9], r[4], newest),
+        reverse=True,
+    )
+    entries = []
+    for row in ranked[:limit]:
+        _iid, _fid, _tid, _fd, to_date, _eff, op, new_key, old_key, severity, diff_text, _sim = row
+        ref, url = row[12], row[13]
+        key = new_key or old_key or "\u2014"
+        body = (window(diff_text) if diff_text else None) or (
+            '<span class="muted">New clause \u2014 read it at MAS.</span>'
+            if op == "ADDED"
+            else '<span class="muted">Clause removed.</span>'
+        )
+        when = f"{to_date:%b %Y}" if to_date else ""
+        entries.append(
+            f"""  <article class="delta {sev_class(severity)}">
+    <header><a class="src" href="{html.escape(url)}">{html.escape(ref)}</a>
+      <span class="clause">{html.escape(key)}</span>
+      <span class="op">{OP_LABEL.get(op, op)}</span>
+      <span class="sim">{when}</span></header>
+    <div class="text">{body}</div>
+  </article>"""
+        )
+    return chr(10).join(entries)
+
+
 def slug(ref: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", ref.lower()).strip("-") + ".html"
 
@@ -184,8 +237,10 @@ def fetch(conn):
             select d.instrument_id, d.from_version_id, d.to_version_id,
                    fv.issue_date, tv.issue_date, tv.effective_date,
                    d.op, d.new_section_key, d.old_section_key,
-                   d.severity, d.diff_html, d.similarity
+                   d.severity, d.diff_html, d.similarity,
+                   i.external_ref, i.source_url
             from deltas d
+            join instruments i on i.id = d.instrument_id
             join instrument_versions fv on fv.id = d.from_version_id
             join instrument_versions tv on tv.id = d.to_version_id
             order by tv.issue_date desc, d.severity desc, d.new_section_key
@@ -200,7 +255,14 @@ def fetch(conn):
             "select instrument_id, count(*) from instrument_versions group by instrument_id"
         )
         version_counts = dict(cur.fetchall())
-    return instruments, deltas, counts, version_counts
+
+        cur.execute(
+            "select finished_at from crawl_runs where status = 'ok' "
+            "and finished_at is not null order by finished_at desc limit 1"
+        )
+        row = cur.fetchone()
+        last_checked = row[0] if row else None
+    return instruments, deltas, counts, version_counts, last_checked
 
 
 def render_instrument(instrument, rows, counts):
@@ -290,8 +352,15 @@ has published, reconstructed automatically from the official documents.
     )
 
 
-def render_index(cards, tracked, changes, latest) -> str:
+def render_index(cards, tracked, changes, latest, recent_html, last_checked) -> str:
     latest_text = f"{latest:%b %Y}" if latest else "—"
+    # The reassurance line. In a month where nothing changed this is the whole value on
+    # display: it separates "nothing happened" from "nobody looked".
+    checked = (
+        f"Corpus last checked against MAS on <strong>{last_checked:%d %B %Y}</strong>."
+        if last_checked
+        else "Corpus rebuilt from the official MAS documents."
+    )
     body = f"""<p class="brand">Clausewatch</p>
 <h1>Singapore AML/CFT — clause-level changelogs</h1>
 <p class="lede">MAS republishes an entire PDF when it amends a notice; it does not
@@ -302,8 +371,15 @@ from the official documents, so you can see exactly what moved and when.</p>
   <dt>Instruments tracked</dt><dd>{tracked}</dd>
   <dt>Clause changes found</dt><dd>{changes}</dd>
   <dt>Most recent change</dt><dd>{latest_text}</dd>
-</dl></div>
+</dl>
+<p class="checked">{checked} Checked daily.</p></div>
 
+<h2 class="section">What changed recently</h2>
+<p class="meta">The changes most likely to need action, ranked by how much they alter an
+obligation and how recent they are. Renumbering and formatting rank below substance.</p>
+{recent_html}
+
+<h2 class="section">All instruments</h2>
 {chr(10).join(cards)}"""
     return page(
         "Singapore AML/CFT clause-level changelogs | Clausewatch",
@@ -315,7 +391,7 @@ from the official documents, so you can see exactly what moved and when.</p>
 
 def main() -> int:
     with connection() as conn:
-        instruments, deltas, counts, version_counts = fetch(conn)
+        instruments, deltas, counts, version_counts, last_checked = fetch(conn)
 
     by_instrument: dict[int, list] = {}
     for row in deltas:
@@ -355,7 +431,11 @@ def main() -> int:
         print(f"  {ref}: {total} deltas -> {slug(ref)}")
 
     (OUT_DIR / "index.html").write_text(
-        render_index(cards, tracked, grand_total, latest_overall), encoding="utf-8"
+        render_index(
+            cards, tracked, grand_total, latest_overall,
+            render_recent(deltas), last_checked,
+        ),
+        encoding="utf-8",
     )
     print(f"\n{tracked} instruments, {grand_total} deltas -> {OUT_DIR}")
     return 0

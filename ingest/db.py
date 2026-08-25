@@ -248,3 +248,50 @@ class PostgresVersionRepository:
             )
             cols = [c.name for c in cur.description]
             return [dict(zip(cols, row, strict=True)) for row in cur.fetchall()]
+
+    # ---------- crawl observability ----------
+
+    def start_crawl_run(self, regulator_id: int) -> int:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "insert into crawl_runs (regulator_id) values (%s) returning id",
+                (regulator_id,),
+            )
+            return cur.fetchone()[0]
+
+    def finish_crawl_run(
+        self,
+        run_id: int,
+        *,
+        status: str,
+        docs_seen: int = 0,
+        versions_new: int = 0,
+        deltas_created: int = 0,
+        error: str | None = None,
+    ) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                update crawl_runs
+                   set finished_at = now(), status = %s, docs_seen = %s,
+                       versions_new = %s, deltas_created = %s, error = %s
+                 where id = %s
+                """,
+                (status, docs_seen, versions_new, deltas_created,
+                 (error or None) and error[:2000], run_id),
+            )
+
+    def last_successful_crawl(self):
+        """When the corpus was last confirmed current.
+
+        Drives the "last checked" line on the public site. In a month where nothing
+        changed, that line is the entire value on display — it is the difference
+        between "nothing happened" and "nobody looked".
+        """
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "select finished_at from crawl_runs where status = 'ok' "
+                "and finished_at is not null order by finished_at desc limit 1"
+            )
+            row = cur.fetchone()
+        return row[0] if row else None

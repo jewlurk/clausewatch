@@ -1,0 +1,79 @@
+# The unattended daily pipeline: crawl MAS, rebuild the corpus, republish the site.
+#
+# One workflow rather than three, so the public site can never show a corpus that is
+# newer or older than the deltas rendered from it.
+#
+# Runs even when nothing has changed: the run is recorded in crawl_runs, and the site
+# shows "last checked on <date>". In a quiet month that line is the product.
+name: daily
+
+on:
+  schedule:
+    - cron: "17 1 * * *" # 01:17 UTC (~09:17 SGT), off-peak, off the hour
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  R2_ACCOUNT_ID: 453137188783dc5aaf71b39099f195ba
+  R2_BUCKET: clausewatch-raw
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install
+        working-directory: ingest
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Crawl MAS
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: python scripts/daily.py
+
+      - name: Rebuild corpus
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: python scripts/build_corpus.py
+
+      - name: Build site
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/build_demo.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: web/
+
+      # Pages steps tolerate failure so a crawl result is never lost to a
+      # deployment problem. They no-op until Pages is enabled on the repo.
+      - uses: actions/configure-pages@v5
+        continue-on-error: true
+      - uses: actions/upload-pages-artifact@v3
+        continue-on-error: true
+        with:
+          path: web
+      - id: deploy
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
