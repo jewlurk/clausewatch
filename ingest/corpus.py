@@ -80,11 +80,21 @@ def parse_version(version_id: int, r2_key: str, text: str) -> ParsedVersion:
 def timeline(versions: list[ParsedVersion]) -> list[ParsedVersion]:
     """Usable versions in chronological order.
 
-    Versions without a parseable date sort last rather than being dropped — a missing
-    date is a parsing gap, not a reason to lose a version from the corpus.
+    A version whose date could not be extracted is excluded, not sorted last. The whole
+    basis of a comparison is that one version precedes another; an undated version
+    placed arbitrarily in the chain produces a diff between two versions that may not
+    be adjacent in reality, which is worse than not diffing it. The exclusion is logged
+    so a date-extraction gap surfaces rather than passing as silence.
     """
     usable = [v for v in versions if v.usable]
-    return sorted(usable, key=lambda v: (v.version_date is None, v.version_date))
+    dated = [v for v in usable if v.version_date is not None]
+    undated = len(usable) - len(dated)
+    if undated:
+        log.warning(
+            "%d consolidated version(s) excluded from the timeline: no date extracted",
+            undated,
+        )
+    return sorted(dated, key=lambda v: v.version_date)
 
 
 def deltas_across(versions: list[ParsedVersion]) -> list[tuple[ParsedVersion, ParsedVersion, list]]:

@@ -408,10 +408,12 @@ def render_instrument(instrument, rows, counts):
             else ""
         )
         eff = f" · effective {effective:%d %B %Y}" if isinstance(effective, date) else ""
+        to_label = f"{to_date:%d %B %Y}" if isinstance(to_date, date) else "Undated revision"
+        from_label = f"{from_date:%d %B %Y}" if isinstance(from_date, date) else "an earlier version"
         sections_html.append(
             f"""  <section class="comparison">
-    <h2>{to_date:%d %B %Y}</h2>
-    <p class="meta">{revision_headline(items)} · since {from_date:%d %B %Y}{eff}</p>
+    <h2>{to_label}</h2>
+    <p class="meta">{revision_headline(items)} · since {from_label}{eff}</p>
 {chr(10).join(entries)}
 {more}
   </section>"""
