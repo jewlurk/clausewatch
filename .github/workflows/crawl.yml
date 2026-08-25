@@ -68,16 +68,16 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/test_rls_isolation.py
-      - name: Console end-to-end verification
-        if: github.event_name == 'workflow_dispatch' && inputs.check_console
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: python scripts/verify_console.py
       - name: Apply migration
         if: github.event_name == 'workflow_dispatch' && inputs.migration != ''
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/apply_migration.py "${{ inputs.migration }}"
+      - name: Console end-to-end verification
+        if: github.event_name == 'workflow_dispatch' && inputs.check_console
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/verify_console.py
       - name: Backfill all tracked instruments (T14)
         if: github.event_name == 'workflow_dispatch' && inputs.backfill_626
         env:
