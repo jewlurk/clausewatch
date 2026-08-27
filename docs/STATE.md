@@ -47,9 +47,16 @@ raised, considered, and decided. Treat G3 as scheduled, not as neglected.
    3.4% false positives over 5 instruments / 119 changes, against the 5% gate. Full
    table, method and caveats: [parse-quality.md](parse-quality.md). Note STATE.md was
    wrong about this: only 626, PSN01 and PSN02 have 2025 tracked copies.
-5. **Investigate undated versions** dropped from timelines (see Known gaps).
-6. **Demote trivial changes** — punctuation and word-order edits still surface with the
-   same weight as substantive ones. Summaries now exist, so ranking can use them.
+5. ~~**Investigate undated versions** dropped from timelines.~~ **Done 26 Aug 2026.**
+   Exactly one consolidated version corpus-wide is undated — FAA-N06's cancelled 2002
+   predecessor — and dropping it is correct. No live timeline loses anything (the
+   pipeline logged no "no date extracted" warning). timeline() now names the dropped
+   r2 keys so a future regression is diagnosable; first tests for it.
+6. ~~**Demote trivial changes.**~~ **Done 26 Aug 2026.** Whitespace/case/punctuation/
+   word-reorder were already severity 1 and dropped; the gap was a reword that changes
+   a real word but carries no obligation (e.g. 626 6.17, a cross-reference update). The
+   summariser's obligation_change flag now feeds both the front-page `importance`
+   ranking and the console's my_changes ordering (migration 0007), ahead of severity.
 7. ~~**Definitions-block changes may be mis-attributed.**~~ **Investigated 26 Aug 2026 —
    not mis-attribution.** Definitions are captured (clause 2.1/2.2) and diffed; 626's
    grew 5,393→8,396 chars and are reported. The one real gap: a definition that embeds
@@ -158,7 +165,7 @@ and `ALERT_FROM` (repo variable), which T26 needs.
 ```bash
 .venv/bin/python scripts/measure_g1.py             # Notice 626 vs MAS's own markup
 .venv/bin/python scripts/measure_parse_quality.py  # the same test, whole corpus
-cd ingest && ../.venv/bin/python -m pytest -q      # 107 tests
+cd ingest && ../.venv/bin/python -m pytest -q      # 127 tests
 ```
 
 The console cannot be verified locally — `DATABASE_URL` only exists in Actions. Dispatch
