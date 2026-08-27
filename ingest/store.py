@@ -104,3 +104,18 @@ class R2Store:
                 return False
             raise
         return True
+
+    def usage(self) -> tuple[int, int]:
+        """(object count, total bytes) across the whole bucket.
+
+        Paginated: list_objects_v2 returns at most 1000 keys per call, and the corpus
+        already has more than that once every version's raw PDF is stored. Used by the
+        weekly cost report (§13) to watch R2 against the 10 GB free-tier ceiling.
+        """
+        count = total = 0
+        paginator = self._client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket):
+            for obj in page.get("Contents", []):
+                count += 1
+                total += obj["Size"]
+        return count, total

@@ -13,7 +13,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ingest"))
 
-from enrich.summarise import EnrichmentBudget, build_client, summarise_change
+from enrich.summarise import (
+    MODEL,
+    EnrichmentBudget,
+    build_client,
+    summarise_change,
+)
 
 from db import PostgresVersionRepository, connection
 
@@ -61,6 +66,15 @@ def main() -> int:
                 action_hint=result.action_hint,
             )
             done += 1
+
+        repo.record_llm_usage(
+            model=MODEL,
+            calls=budget.calls,
+            input_tokens=budget.input_tokens,
+            output_tokens=budget.output_tokens,
+            rejected=len(budget.rejected),
+            summarised=done,
+        )
 
     print(f"\n{done} summarised, {skipped} skipped")
     print(budget.report())

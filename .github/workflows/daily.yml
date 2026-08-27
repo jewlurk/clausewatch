@@ -77,6 +77,18 @@ jobs:
           ALERT_FROM: ${{ vars.ALERT_FROM }}
         run: python scripts/send_alerts.py
 
+      # Cost & health check every run (§13). Prints the report to the log and exits
+      # non-zero if the database or R2 crosses its alarm, so a threshold cannot be
+      # crossed silently. continue-on-error keeps a breach from discarding the crawl —
+      # it shows as a warning, not a lost run. Weekly emailing waits on a domain (T26).
+      - name: Cost & health report (T29)
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: python scripts/cost_report.py --no-email
+
       - uses: actions/upload-artifact@v4
         with:
           name: site

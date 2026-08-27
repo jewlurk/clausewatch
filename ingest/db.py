@@ -334,3 +334,27 @@ class PostgresVersionRepository:
                 "ai_action_hint = %s where id = %s",
                 (summary, obligation_change, action_hint or None, delta_id),
             )
+
+    def record_llm_usage(
+        self,
+        *,
+        model: str,
+        calls: int,
+        input_tokens: int,
+        output_tokens: int,
+        rejected: int,
+        summarised: int,
+    ) -> None:
+        """One row per enrichment run, so a month's token spend is a SQL sum (§13).
+
+        Skips a run that made no calls: an empty row would dilute the average and
+        implies a request was made when none was.
+        """
+        if calls == 0:
+            return
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "insert into llm_usage (model, calls, input_tokens, output_tokens, "
+                "rejected, summarised) values (%s, %s, %s, %s, %s, %s)",
+                (model, calls, input_tokens, output_tokens, rejected, summarised),
+            )

@@ -25,6 +25,10 @@ on:
         description: "Summarise this many un-summarised changes (blank = none)"
         type: string
         default: ""
+      check_cost:
+        description: "Print the cost & health report (emails if Resend is configured)"
+        type: boolean
+        default: false
       send_alerts_dry_run:
         description: "Render the T26 alert emails from live data without sending"
         type: boolean
@@ -88,6 +92,16 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ENRICH_BATCH: ${{ inputs.enrich_batch }}
         run: python scripts/enrich.py
+      - name: Cost & health report (T29)
+        if: github.event_name == 'workflow_dispatch' && inputs.check_cost
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ vars.ALERT_FROM }}
+          FOUNDER_EMAIL: ${{ vars.FOUNDER_EMAIL }}
+        run: python scripts/cost_report.py
       - name: Alert email dry run (T26)
         if: github.event_name == 'workflow_dispatch' && inputs.send_alerts_dry_run
         env:
