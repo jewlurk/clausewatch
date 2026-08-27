@@ -50,10 +50,12 @@ raised, considered, and decided. Treat G3 as scheduled, not as neglected.
 5. **Investigate undated versions** dropped from timelines (see Known gaps).
 6. **Demote trivial changes** — punctuation and word-order edits still surface with the
    same weight as substantive ones. Summaries now exist, so ranking can use them.
-7. **Definitions-block changes may be mis-attributed.** The June 2021 markup for four
-   instruments sits in the unnumbered definitions block; spot-checking FAA-N06, that
-   wording lands in clause 8.8's body. Suspicion, not a measurement — resolve before
-   claiming definition changes are covered. See [parse-quality.md](parse-quality.md).
+7. ~~**Definitions-block changes may be mis-attributed.**~~ **Investigated 26 Aug 2026 —
+   not mis-attribution.** Definitions are captured (clause 2.1/2.2) and diffed; 626's
+   grew 5,393→8,396 chars and are reported. The one real gap: a definition that embeds
+   an inline "Appendix 1." reference truncates at that point in *both* versions, so a
+   change inside it is absorbed and missed — a narrow false negative, never wrong data.
+   Details and a proposed fix in [parse-quality.md](parse-quality.md).
 8. Optional, in value order: Guidelines coverage (they change more often than the
    notices), T16 SQL trigram matcher, T29 cost guardrails, T31 schema-drift detection,
    T32 restore drill, T34 vendor security pack.

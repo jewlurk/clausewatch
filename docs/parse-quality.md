@@ -71,19 +71,27 @@ rather than as the bug it is. The test is now "chromatic" — black, white and g
 equal RGB components and every markup colour seen so far does not. Notice 626's G1
 numbers are unchanged by this.
 
-**2. The June 2021 markup for four instruments is not attributable to a clause.**
-FAA-N06, TCA-N03, SFA13-N01 and SFA04-N02 all have a June 2021 tracked copy carrying
-~430 coloured characters, and the oracle extracts nothing from any of them. The markup
-is real and substantive — definitions of "bank" and "stored value facility" changed,
-`administrated` became `administered` — but it sits in the **unnumbered definitions
-block and the endnotes**, which the parser does not attach to a numbered clause key.
+**2. A definition that embeds an appendix reference can truncate — and hide a change.**
+FAA-N06's definition of "financial adviser" points at "Appendix 1", and the string
+`Appendix 1.` on its own line is a real appendix heading elsewhere in the document, so
+`CONTAINER_RE` correctly fires — but here it fires *inside* the definition and cuts it
+short. The removed 2021 exclusion ("does not include holders of stored value
+facilities") sits in the truncated tail.
 
-Whether the differ *reports* those changes is a separate open question. Spot-checking
-FAA-N06, the 2021 definition wording is parsed into clause `8.8`'s body, which suggests
-mis-attribution rather than a silent miss — but that is a suspicion, not a measurement.
-Worth resolving before anyone claims definition changes are covered.
+The saving grace, and the reason this is disclosed rather than urgent: the truncation is
+**identical in both versions** (old and new clause 2.1 are both 4,700 chars, similarity
+1.0), so the differ never emits wrong data — it simply does not see the change. This is a
+false negative confined to definitions that embed an appendix cross-reference, not the
+mis-attribution the earlier note guessed at: the "administered"/"section 7 of" wording is
+legitimately in clause 8.8, not misfiled from the definitions block. Definitions that do
+not embed such a reference parse in full — Notice 626's grew 5,393→8,396 characters
+between 2015 and 2025 and the change is reported.
 
-## Method
+Worth a targeted fix (only treat a `CONTAINER_RE` line as a container when it is not
+inside an open clause whose text refers to it), but not before the blast radius on the 0%
+false-positive figure is measured — the appendix detection is load-bearing.
+
+## Method## Method
 
 1. Fetch every PDF linked from each instrument's MAS landing page (cached; 2s apart).
 2. Classify each with the pipeline's own `classify()` — consolidated, tracked, or

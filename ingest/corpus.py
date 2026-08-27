@@ -88,11 +88,16 @@ def timeline(versions: list[ParsedVersion]) -> list[ParsedVersion]:
     """
     usable = [v for v in versions if v.usable]
     dated = [v for v in usable if v.version_date is not None]
-    undated = len(usable) - len(dated)
-    if undated:
+    dropped = [v for v in usable if v.version_date is None]
+    if dropped:
+        # Name the r2 keys, not just a count: a future date-extraction regression
+        # should be diagnosable from the log without re-running anything. The one
+        # known case is FAA-N06's cancelled 2002 predecessor, whose header carries no
+        # date — correctly excluded, but the log should still say which document.
         log.warning(
-            "%d consolidated version(s) excluded from the timeline: no date extracted",
-            undated,
+            "%d consolidated version(s) excluded from the timeline (no date extracted): %s",
+            len(dropped),
+            ", ".join(v.r2_key for v in dropped),
         )
     return sorted(dated, key=lambda v: v.version_date)
 
