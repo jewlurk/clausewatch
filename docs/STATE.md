@@ -63,9 +63,16 @@ raised, considered, and decided. Treat G3 as scheduled, not as neglected.
    an inline "Appendix 1." reference truncates at that point in *both* versions, so a
    change inside it is absorbed and missed — a narrow false negative, never wrong data.
    Details and a proposed fix in [parse-quality.md](parse-quality.md).
-8. Optional, in value order: Guidelines coverage (they change more often than the
-   notices), T16 SQL trigram matcher, T29 cost guardrails, T31 schema-drift detection,
-   T32 restore drill, T34 vendor security pack.
+8. Optional, in value order:
+   - ~~**T29 cost guardrails.**~~ **Done 26 Aug 2026.** `ingest/cost.py` prices Haiku
+     (USD 1/5 per 1M), alarms at 350 MB DB / 7 GB R2. Migration 0008 + `llm_usage`
+     persist per-run tokens; `scripts/cost_report.py` prints DB size, R2 storage,
+     month-to-date spend and row counts, exits non-zero on a breached alarm. Runs every
+     day in daily.yml (logged) and on demand via `crawl.yml` -> `check_cost`. Weekly
+     email waits on the domain (reuses T26's Resend transport).
+   - Still open: Guidelines coverage (they change more often than the notices), T16 SQL
+     trigram matcher, T31 schema-drift detection, T32 restore drill, T34 vendor
+     security pack.
 
 ### The domain is now a blocker, not a preference
 
@@ -96,7 +103,8 @@ thing being bought is the alerting half of the product, not a nicer-looking link
 
 GitHub secrets in use: `DATABASE_URL` (session pooler), `R2_ACCESS_KEY_ID`,
 `R2_SECRET_ACCESS_KEY`, `ANTHROPIC_API_KEY`. Not yet set: `RESEND_API_KEY` (secret)
-and `ALERT_FROM` (repo variable), which T26 needs.
+and `ALERT_FROM` + `FOUNDER_EMAIL` (repo variables), which T26 and the T29
+cost-report email need.
 
 ## Hard-won gotchas — do not rediscover these
 
@@ -165,7 +173,7 @@ and `ALERT_FROM` (repo variable), which T26 needs.
 ```bash
 .venv/bin/python scripts/measure_g1.py             # Notice 626 vs MAS's own markup
 .venv/bin/python scripts/measure_parse_quality.py  # the same test, whole corpus
-cd ingest && ../.venv/bin/python -m pytest -q      # 127 tests
+cd ingest && ../.venv/bin/python -m pytest -q      # 135 tests
 ```
 
 The console cannot be verified locally — `DATABASE_URL` only exists in Actions. Dispatch
