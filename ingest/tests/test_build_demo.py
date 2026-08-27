@@ -18,6 +18,7 @@ from build_demo import (
     DELTA_COLUMNS,
     EXCERPT_CAP,
     col,
+    importance,
     render_instrument,
     render_recent,
     revision_headline,
@@ -99,3 +100,40 @@ def test_excerpt_cap_limits_how_many_clauses_a_revision_shows():
 def test_every_front_page_entry_links_to_mas():
     html = render_recent([row()])
     assert 'href="https://www.mas.gov.sg/regulation/notices/notice-626"' in html
+
+
+# ---------- ranking (item 6: demote trivial changes) ----------
+
+from datetime import date as _date
+
+
+def test_obligation_change_outranks_an_equal_severity_reword():
+    """A cross-reference update and a real obligation change both land on severity 3;
+    the obligation flag is what separates them."""
+    reword = importance("MODIFIED", 3, _date(2025, 6, 30), _date(2025, 6, 30), False)
+    obligation = importance("MODIFIED", 3, _date(2025, 6, 30), _date(2025, 6, 30), True)
+    assert obligation > reword
+
+
+def test_recency_still_matters_within_a_severity():
+    recent = importance("MODIFIED", 4, _date(2025, 6, 30), _date(2025, 6, 30))
+    old = importance("MODIFIED", 4, _date(2018, 1, 1), _date(2025, 6, 30))
+    assert recent > old
+
+
+def test_a_heavier_change_still_leads_a_recent_obligation_reword():
+    """The obligation boost lifts a change; it must not let a light one leap a heavy one."""
+    heavy = importance("ADDED", 5, _date(2024, 1, 1), _date(2025, 6, 30), False)
+    light = importance("MODIFIED", 3, _date(2025, 6, 30), _date(2025, 6, 30), True)
+    assert heavy > light
+
+
+def test_front_page_orders_obligation_changes_ahead_of_equal_severity_rewords():
+    rows = [
+        row(instrument_id=1, new_key="6.17", severity=3, obligation_change=False,
+            ai_summary="Cross-reference updated following renumbering."),
+        row(instrument_id=2, new_key="6.14", severity=3, obligation_change=True,
+            ai_summary="Screening obligation extended to beneficial owners."),
+    ]
+    html = render_recent(rows)
+    assert html.index("6.14") < html.index("6.17")

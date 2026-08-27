@@ -232,9 +232,21 @@ def excerpt(text: str, words: int = EXCERPT_WORDS) -> str:
     return " ".join(parts[:words]) + ("\u2026" if len(parts) > words else "")
 
 
-def importance(op: str, severity: int, revision: date | None, newest: date | None) -> float:
-    """Rank a change for the front page. Higher is more worth reading."""
+def importance(op: str, severity: int, revision: date | None, newest: date | None,
+               obligation_change: bool = False) -> float:
+    """Rank a change for the front page. Higher is more worth reading.
+
+    Severity is a deterministic heuristic — it cannot tell a substantive reword from a
+    trivial one, so two MODIFIED clauses that both changed a word but neither a number
+    nor a modal land on the same default of 3. `obligation_change` is the signal that
+    separates them: the summariser sets it when the change alters what a firm must do,
+    which is exactly the change a compliance officer reads first. It is worth about one
+    severity point, enough to lift a real obligation change above an incidental reword
+    of the same nominal severity without letting it leap a genuinely heavier change.
+    """
     score = severity * 2 + OP_WEIGHT.get(op, 1)
+    if obligation_change:
+        score += 2
     if revision and newest:
         # Decay by revision age so the current amendment leads, without burying an
         # older high-severity change entirely.
@@ -249,7 +261,8 @@ def render_recent(rows, limit: int = 12) -> str:
     ranked = sorted(
         rows,
         key=lambda r: importance(col(r, "op"), col(r, "severity"),
-                                 col(r, "to_date"), newest),
+                                 col(r, "to_date"), newest,
+                                 col(r, "obligation_change")),
         reverse=True,
     )
     # Cap per instrument. Ranking alone let SFA04-N02's 2025 restatement fill every
