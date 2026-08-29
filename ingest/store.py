@@ -105,6 +105,17 @@ class R2Store:
             raise
         return True
 
+    def list_keys(self, prefix: str = "") -> list[str]:
+        """Every object key under a prefix (paginated)."""
+        keys: list[str] = []
+        paginator = self._client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
+            keys.extend(obj["Key"] for obj in page.get("Contents", []))
+        return keys
+
+    def delete(self, key: str) -> None:
+        self._client.delete_object(Bucket=self.bucket, Key=key)
+
     def usage(self) -> tuple[int, int]:
         """(object count, total bytes) across the whole bucket.
 

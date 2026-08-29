@@ -1,0 +1,74 @@
+# Offsite backup + restore drill (T32, §32).
+#
+# Weekly: dump the Supabase database to R2, then prove the dump restores by loading it
+# into a throwaway Postgres and checking every table's row count round-trips. A backup
+# nobody has restored is a belief, not a backup — so the drill runs every time.
+name: backup
+
+on:
+  schedule:
+    - cron: "37 2 * * 0" # 02:37 UTC Sunday, off-hours, after the daily crawl
+  workflow_dispatch:
+    inputs:
+      drill_only:
+        description: "Run the restore drill without uploading a new backup to R2"
+        type: boolean
+        default: false
+
+env:
+  R2_ACCOUNT_ID: 453137188783dc5aaf71b39099f195ba
+  R2_BUCKET: clausewatch-raw
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    # An isolated Postgres to restore into. Same major version as Supabase (17) so the
+    # dump loads without a version mismatch. Nothing real ever touches this container.
+    services:
+      restore_target:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: drill
+          POSTGRES_DB: restore_target
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      # Supabase is Postgres 17; the runner ships the 16 client, which refuses to dump a
+      # newer server. Install the 17 client from the PostgreSQL project's own apt repo.
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
+
+      - name: Install
+        working-directory: ingest
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Upload backup to R2
+        if: ${{ !inputs.drill_only }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: python scripts/backup.py
+
+      - name: Restore drill (actual restore, verified)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESTORE_DATABASE_URL: postgresql://postgres:drill@localhost:5433/restore_target
+        run: python scripts/restore_drill.py
