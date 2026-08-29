@@ -25,6 +25,10 @@ on:
         description: "Summarise this many un-summarised changes (blank = none)"
         type: string
         default: ""
+      check_drift:
+        description: "Audit the corpus for MAS-side schema drift"
+        type: boolean
+        default: false
       check_cost:
         description: "Print the cost & health report (emails if Resend is configured)"
         type: boolean
@@ -92,6 +96,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ENRICH_BATCH: ${{ inputs.enrich_batch }}
         run: python scripts/enrich.py
+      - name: Schema-drift check (T31)
+        if: github.event_name == 'workflow_dispatch' && inputs.check_drift
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/check_drift.py
       - name: Cost & health report (T29)
         if: github.event_name == 'workflow_dispatch' && inputs.check_cost
         env:

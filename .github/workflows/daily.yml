@@ -77,6 +77,16 @@ jobs:
           ALERT_FROM: ${{ vars.ALERT_FROM }}
         run: python scripts/send_alerts.py
 
+      # Schema-drift check (§31): audits the corpus the crawl just wrote and fails
+      # loudly if a MAS format change has broken discovery, parsing, or dates — so we
+      # hear about it the same day, not from a customer. continue-on-error surfaces it
+      # as a warning without discarding the crawl.
+      - name: Schema-drift check (T31)
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/check_drift.py
+
       # Cost & health check every run (§13). Prints the report to the log and exits
       # non-zero if the database or R2 crosses its alarm, so a threshold cannot be
       # crossed silently. continue-on-error keeps a breach from discarding the crawl —
