@@ -7,6 +7,18 @@ boilerplate, so a lawyer is reviewing something concrete instead of drafting fro
 scratch — that is the cost saving. They are **not** a substitute for review by a
 Singapore-qualified lawyer before you take a single dollar.
 
+## What's here
+
+- `terms-of-service.md` — the contract, incl. the completeness disclaimer (§4 below).
+- `privacy-policy.md` — PDPA privacy notice, incl. subprocessors and DPO.
+- `vendor-security.md` — **the vendor security & data-handling pack (T34).** The first
+  serious FI will send its own security questionnaire; this is the answer to send back.
+  It is a factual technical description of the system as built — data held, data flow,
+  subprocessors, tenant isolation, controls — and it states the maturity gaps (no SOC 2,
+  no pentest) plainly rather than hiding them. Same `[PLACEHOLDER]` discipline: fill
+  entity name, DPO, and date before sending. Its claims are testable against the code,
+  so keep it in sync when the architecture changes.
+
 ## What must be filled in before these go live
 
 Every placeholder is in `[SQUARE BRACKETS]`. You cannot publish with them unfilled:
@@ -58,6 +70,9 @@ Leave it in. Two reasons:
 - [ ] Entity name and address filled into both documents
 - [ ] Documents published at stable URLs and linked from the site footer and onboarding
 - [ ] Terms acceptance recorded at signup (date, version, user) — currently not implemented
+- [ ] `vendor-security.md` placeholders filled — but this one is needed for the **first
+      serious sales conversation**, not just before revenue: an FI sends the
+      questionnaire during evaluation, well before you invoice
 
 ## Where these should live
 

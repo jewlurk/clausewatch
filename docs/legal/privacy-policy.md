@@ -112,10 +112,10 @@ We do not disclose personal data except:
 | Provider | Purpose | Data | Location |
 |---|---|---|---|
 | Supabase | Database and authentication | Account, configuration, usage data | Singapore |
-| Cloudflare | Application hosting, object storage, network security | Technical data; raw MAS documents (no personal data) | Global edge network |
-| Resend | Sending alert and service emails | Name, email address, message content | United States |
-| GitHub | Runs the scheduled processing pipeline | No customer personal data | United States |
-| Google (Gemini API) | Generating descriptive summaries of regulatory changes | **Public MAS text only. No customer personal data is ever sent.** | United States |
+| Cloudflare | Object storage (raw MAS documents) and network security | Raw MAS documents (no personal data) | Asia-Pacific / global edge network |
+| GitHub | Static site hosting and the scheduled processing pipeline | No customer personal data | United States |
+| Anthropic | Generating descriptive summaries of regulatory changes | **Public MAS text only. No customer personal data is ever sent.** | United States |
+| Resend | Sending alert and service emails (not yet active) | Name, email address, message content | United States |
 
 We keep this list current. Material changes will be notified.
 
