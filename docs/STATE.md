@@ -70,9 +70,31 @@ raised, considered, and decided. Treat G3 as scheduled, not as neglected.
      month-to-date spend and row counts, exits non-zero on a breached alarm. Runs every
      day in daily.yml (logged) and on demand via `crawl.yml` -> `check_cost`. Weekly
      email waits on the domain (reuses T26's Resend transport).
-   - Still open: Guidelines coverage (they change more often than the notices), T16 SQL
-     trigram matcher, T31 schema-drift detection, T32 restore drill, T34 vendor
-     security pack.
+   - ~~**T34 vendor security pack.**~~ **Done 26 Aug 2026.** docs/legal/vendor-security.md.
+   - ~~**T31 schema-drift detection.**~~ **Done 30 Aug 2026.** ingest/drift.py +
+     scripts/check_drift.py; runs daily in the pipeline and on demand (check_drift).
+   - ~~**T32 restore drill.**~~ **Done 30 Aug 2026.** scripts/backup.py (pg_dump ->
+     R2) + scripts/restore_drill.py, run by backup.yml weekly. An actual restore into
+     an isolated postgres:17 is verified by row-count round-trip — DRILL PASSED, all 13
+     tables match, RLS + trigram index intact.
+   - ~~**T33 second regulator adapter.**~~ **Done 30 Aug 2026.** ingest/crawler/iras.py
+     (IRAS e-Tax Guides) proves the SourceAdapter seam. Finding: the portability
+     boundary is the FETCH layer, not the adapter — IRAS/SGX/CEA render document lists
+     client-side, so a live crawl of them needs a JS-capable fetch step; MAS's legacy
+     per-notice pages are static, which is why the no-JS crawler works there.
+   - ~~**T16 SQL trigram matcher.**~~ **Built 30 Aug 2026**, verified against live data:
+     ingest/matcher.py runs the renumber-hunt over the pg_trgm GIN index;
+     scripts/verify_matcher.py (crawl.yml check_matcher) proves it produces deltas
+     identical to the in-memory matcher, so the measured accuracy is preserved.
+   - Still open: **Guidelines coverage** (more frequent than notices; same regulator,
+     different instrument type — needs its own accuracy measurement before shipping).
+   - **T30 billing** stays deferred to Feb 2027 per the brief — do not build before then.
+
+### UI
+
+The whole site was restyled 30 Aug 2026 for spacing and polish (warmer near-black,
+rounded cards/pills, separated cards, generous padding). Generated pages get it from
+build_demo.py STYLE; app.html and guide.html carry their own matching styles.
 
 ### The domain is now a blocker, not a preference
 
