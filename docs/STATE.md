@@ -82,7 +82,7 @@ raised, considered, and decided. Treat G3 as scheduled, not as neglected.
      boundary is the FETCH layer, not the adapter — IRAS/SGX/CEA render document lists
      client-side, so a live crawl of them needs a JS-capable fetch step; MAS's legacy
      per-notice pages are static, which is why the no-JS crawler works there.
-   - ~~**T16 SQL trigram matcher.**~~ **Built 30 Aug 2026**, verified against live data:
+   - ~~**T16 SQL trigram matcher.**~~ **Done & verified 30 Aug 2026** (52/52 version pairs identical both ways):
      ingest/matcher.py runs the renumber-hunt over the pg_trgm GIN index;
      scripts/verify_matcher.py (crawl.yml check_matcher) proves it produces deltas
      identical to the in-memory matcher, so the measured accuracy is preserved.
