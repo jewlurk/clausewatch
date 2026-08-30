@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ingest"))
 
 from corpus import deltas_across, parse_version
 from instruments import MAS_INSTRUMENTS
+from matcher import SqlMatcher
 from parse.sections import extract_pdf_text
 from store import R2Store
 
@@ -43,7 +44,11 @@ def build_one(repo, store, instrument_id: int, ref: str) -> tuple[int, int]:
         repo.set_version_dates(pv.version_id, pv.version_date, pv.effective_date)
         parsed.append(pv)
 
-    pairs = deltas_across(parsed)
+    # T16: the renumber-hunt runs as SQL over the pg_trgm GIN index, bound to the newer
+    # version of each pair. Its sections are already persisted above, so the matcher
+    # reads them from the database instead of looping in Python.
+    pairs = deltas_across(parsed, matcher_factory=lambda newer: SqlMatcher(
+        repo.conn, newer.version_id))
     total = 0
     for older, newer, deltas in pairs:
         total += repo.replace_deltas(

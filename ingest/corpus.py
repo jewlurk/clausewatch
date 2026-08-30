@@ -102,12 +102,21 @@ def timeline(versions: list[ParsedVersion]) -> list[ParsedVersion]:
     return sorted(dated, key=lambda v: v.version_date)
 
 
-def deltas_across(versions: list[ParsedVersion]) -> list[tuple[ParsedVersion, ParsedVersion, list]]:
-    """Compute deltas between each consecutive pair on the timeline."""
+def deltas_across(
+    versions: list[ParsedVersion], matcher_factory=None
+) -> list[tuple[ParsedVersion, ParsedVersion, list]]:
+    """Compute deltas between each consecutive pair on the timeline.
+
+    `matcher_factory(newer)` supplies the renumber-hunt matcher bound to the newer
+    version — the pipeline passes one backed by the pg_trgm GIN index (T16). When it is
+    None the differ falls back to its pure in-memory matcher, which is what the offline
+    tests and threshold tuning use.
+    """
     ordered = timeline(versions)
     out = []
     for older, newer in itertools.pairwise(ordered):
-        computed = compute_delta(older.sections, newer.sections)
+        matcher = matcher_factory(newer) if matcher_factory else None
+        computed = compute_delta(older.sections, newer.sections, matcher=matcher)
         log.info(
             "%s -> %s: %d deltas",
             older.version_date,

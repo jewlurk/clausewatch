@@ -25,6 +25,10 @@ on:
         description: "Summarise this many un-summarised changes (blank = none)"
         type: string
         default: ""
+      check_matcher:
+        description: "Prove the SQL trigram matcher agrees with the in-memory one (T16)"
+        type: boolean
+        default: false
       check_drift:
         description: "Audit the corpus for MAS-side schema drift"
         type: boolean
@@ -96,6 +100,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ENRICH_BATCH: ${{ inputs.enrich_batch }}
         run: python scripts/enrich.py
+      - name: SQL matcher agreement check (T16)
+        if: github.event_name == 'workflow_dispatch' && inputs.check_matcher
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: python scripts/verify_matcher.py
       - name: Schema-drift check (T31)
         if: github.event_name == 'workflow_dispatch' && inputs.check_drift
         env:
