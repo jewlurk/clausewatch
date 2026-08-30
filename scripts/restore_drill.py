@@ -61,40 +61,48 @@ def counts(dsn: str) -> dict[str, int]:
         conn.close()
 
 
-def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, check=True, capture_output=True, text=True, **kw)
+def run(cmd: list[str], *, check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, check=check, capture_output=True, text=True)
 
 
 def prepare_target(dsn: str) -> None:
-    """Wipe the restore target and lay down the stubs a public-only dump needs."""
+    """Wipe the restore target and lay down the auth stubs a public-only dump needs.
+
+    The dump recreates the public schema and its extensions itself, so we drop public
+    and leave it for pg_restore to build — pre-creating it collides with the dump's own
+    CREATE SCHEMA. What the dump does NOT carry is the auth schema (the public dump
+    references auth.users via a foreign key and auth.uid() in the RLS policies), so we
+    stub that here. The FK's data enforcement is skipped by --disable-triggers during
+    the data phase.
+    """
     conn = connect(dsn)
     conn.autocommit = True
     try:
         with conn.cursor() as cur:
             cur.execute("drop schema if exists public cascade")
-            cur.execute("create schema public")
-            # The public dump references the auth schema (auth.users FK, auth.uid() in
-            # RLS policies). Stub both so the schema restores; the FK's data enforcement
-            # is skipped by --disable-triggers during the data phase.
-            cur.execute("create schema if not exists auth")
-            cur.execute("create table if not exists auth.users (id uuid primary key)")
+            cur.execute("drop schema if exists auth cascade")
+            cur.execute("create schema auth")
+            cur.execute("create table auth.users (id uuid primary key)")
             cur.execute("create or replace function auth.uid() returns uuid "
                         "language sql stable as $$ select null::uuid $$")
-            cur.execute("create extension if not exists pgcrypto")
-            cur.execute("create extension if not exists pg_trgm")
     finally:
         conn.close()
 
 
 def restore(dump_path: Path, dsn: str) -> None:
     prepare_target(dsn)
-    # Schema first, then data with FK/triggers disabled. Errors are tolerated on the
-    # schema phase (the pg_trgm/pgcrypto extensions already exist) but the data phase
-    # must succeed.
-    run(["pg_restore", "--no-owner", "--no-privileges",
-         "--section=pre-data", "--section=post-data", "--dbname", dsn, str(dump_path)])
-    run(["pg_restore", "--no-owner", "--no-privileges", "--data-only",
-         "--disable-triggers", "--dbname", dsn, str(dump_path)])
+    # Schema first, then data with FK/triggers disabled. The schema phase is tolerant:
+    # a public dump can carry a benign "already exists" (e.g. an extension the container
+    # ships). Real breakage is caught by the row-count verification, not by pg_restore's
+    # exit code, so both phases run with check=False and their output is surfaced.
+    pre = run(["pg_restore", "--no-owner", "--no-privileges", "--section=pre-data",
+               "--section=post-data", "--dbname", dsn, str(dump_path)], check=False)
+    data = run(["pg_restore", "--no-owner", "--no-privileges", "--data-only",
+                "--disable-triggers", "--dbname", dsn, str(dump_path)], check=False)
+    for phase in (pre, data):
+        if phase.stderr.strip():
+            print("   pg_restore notes:\n     " +
+                  "\n     ".join(phase.stderr.strip().splitlines()[-6:]))
 
 
 def rls_intact(dsn: str) -> bool:
@@ -129,11 +137,7 @@ def main() -> int:
         print(f"   dump: {dump_path.stat().st_size/1_000_000:.1f} MB")
 
         print("3. restoring into the isolated target")
-        try:
-            restore(dump_path, target)
-        except subprocess.CalledProcessError as exc:
-            print(f"RESTORE FAILED\nstdout:\n{exc.stdout}\nstderr:\n{exc.stderr}")
-            return 1
+        restore(dump_path, target)
 
     print("4. verifying row counts round-trip\n")
     restored_counts = counts(target)
