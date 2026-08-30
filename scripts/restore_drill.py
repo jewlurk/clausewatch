@@ -68,12 +68,18 @@ def run(cmd: list[str], *, check: bool = True) -> subprocess.CompletedProcess:
 def prepare_target(dsn: str) -> None:
     """Wipe the restore target and lay down the auth stubs a public-only dump needs.
 
-    The dump recreates the public schema and its extensions itself, so we drop public
-    and leave it for pg_restore to build — pre-creating it collides with the dump's own
-    CREATE SCHEMA. What the dump does NOT carry is the auth schema (the public dump
-    references auth.users via a foreign key and auth.uid() in the RLS policies), so we
-    stub that here. The FK's data enforcement is skipped by --disable-triggers during
-    the data phase.
+    A --schema=public dump carries neither the extensions (CREATE EXTENSION is filtered
+    out by --schema) nor the auth schema (the public tables reference auth.users via a
+    foreign key and auth.uid() in the RLS policies). Both are laid down here:
+
+      * pg_trgm and pgcrypto in public, so the sections trigram index — which references
+        public.gin_trgm_ops — restores;
+      * an auth schema with a stub users table and uid() function.
+
+    The dump also re-emits CREATE SCHEMA public, which now collides with the public we
+    create for the extensions — that "already exists" error is benign and tolerated by
+    the check=False restore. The FK's data enforcement is skipped by --disable-triggers
+    during the data phase.
     """
     conn = connect(dsn)
     conn.autocommit = True
@@ -81,6 +87,9 @@ def prepare_target(dsn: str) -> None:
         with conn.cursor() as cur:
             cur.execute("drop schema if exists public cascade")
             cur.execute("drop schema if exists auth cascade")
+            cur.execute("create schema public")
+            cur.execute("create extension if not exists pg_trgm with schema public")
+            cur.execute("create extension if not exists pgcrypto with schema public")
             cur.execute("create schema auth")
             cur.execute("create table auth.users (id uuid primary key)")
             cur.execute("create or replace function auth.uid() returns uuid "
