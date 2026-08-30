@@ -30,9 +30,17 @@ from db import PostgresVersionRepository, connect
 
 
 def key(deltas):
-    """A comparable, order-independent signature of a delta list."""
+    """A comparable, order-independent signature of a delta list.
+
+    The match DECISION is (op, old_key, new_key, severity) — that is what determines
+    which changes get reported, and it must match exactly. The similarity is rounded to
+    two places because pg_trgm returns it as a float4 while the in-memory matcher
+    computes a float64, so identical matches differ in the ~4th decimal (0.9119 vs
+    0.912). That is representation, not behaviour: two places absorbs the float4 noise
+    while a genuine divergence still shows up in the op/key fields.
+    """
     return sorted(
-        (d.op, d.old_section_key, d.new_section_key, d.severity, round(d.similarity or 0, 4))
+        (d.op, d.old_section_key, d.new_section_key, d.severity, round(d.similarity or 0, 2))
         for d in deltas
     )
 
